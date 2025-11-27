@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-// redirect root ke login/dashboard
+// Halaman home (landing page)
 Route::get('/', function () {
-    return auth()->check() ? redirect('/dashboard') : redirect('/login');
-});
+    return auth()->check() ? redirect('/dashboard') : view('home');
+})->name('home');
 
 // halaman sebelum login
 Route::get('/login', [App\Http\Controllers\AuthController::class, 'showLogin'])->name('login');
