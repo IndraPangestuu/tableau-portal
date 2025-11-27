@@ -51,4 +51,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/menus/reorder', [App\Http\Controllers\MenuController::class, 'reorder'])->name('menus.reorder');
     Route::get('/menus/fetch-views', [App\Http\Controllers\MenuController::class, 'fetchTableauViews'])->name('menus.fetch-views');
     Route::get('/menus/fetch-sites', [App\Http\Controllers\MenuController::class, 'fetchTableauSites'])->name('menus.fetch-sites');
+
+    // Backups
+    Route::get('/backups', [App\Http\Controllers\Admin\BackupController::class, 'index'])->name('backups.index');
+    Route::post('/backups', [App\Http\Controllers\Admin\BackupController::class, 'store'])->name('backups.store');
+    Route::get('/backups/{filename}/download', [App\Http\Controllers\Admin\BackupController::class, 'download'])->name('backups.download');
+    Route::post('/backups/{filename}/restore', [App\Http\Controllers\Admin\BackupController::class, 'restore'])->name('backups.restore');
+    Route::delete('/backups/{filename}', [App\Http\Controllers\Admin\BackupController::class, 'destroy'])->name('backups.destroy');
 });

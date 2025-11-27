@@ -302,6 +302,11 @@
                     <i class="fas fa-th-list"></i> Kelola Menu
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('backups.index') }}" class="nav-link {{ request()->routeIs('backups.*') ? 'active' : '' }}">
+                    <i class="fas fa-database"></i> Backup Database
+                </a>
+            </li>
             @endif
         </ul>
     </aside>
