@@ -12,7 +12,7 @@ class EmbedController extends Controller
      */
     protected function getDefaultUsername(): string
     {
-        return config('tableau.viewer_username', 'korlantas_viewer_2');
+        return config('tableau.viewer_username', 'korlantas');
     }
 
     /**
