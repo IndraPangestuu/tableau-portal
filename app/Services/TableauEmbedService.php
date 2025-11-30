@@ -38,6 +38,8 @@ class TableauEmbedService
             CURLOPT_TIMEOUT         => 15,
             CURLOPT_SSL_VERIFYHOST  => false,
             CURLOPT_SSL_VERIFYPEER  => false,
+            CURLOPT_FOLLOWLOCATION  => true,  // Follow redirects (307, 301, 302)
+            CURLOPT_MAXREDIRS       => 5,
         ]);
 
         $ticket    = curl_exec($ch);

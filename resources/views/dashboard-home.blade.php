@@ -46,9 +46,11 @@
             <tableau-viz
                 id="tableauViz"
                 src="{{ $embed_url }}"
-                device="desktop"
-                toolbar="bottom"
+                toolbar="hidden"
                 hide-tabs
+                device="default"
+                width="100%"
+                height="100%"
             ></tableau-viz>
         @endif
     </div>
@@ -127,12 +129,55 @@
     .loading-progress { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
     .progress-bar { height: 100%; width: 0; background: linear-gradient(90deg, #6366f1, #22d3ee); border-radius: 4px; animation: progressAnim 3s ease-in-out infinite; }
     @keyframes progressAnim { 0% { width: 0; } 50% { width: 70%; } 100% { width: 100%; } }
+    
+    /* Tableau viz full width */
+    #tableauViz {
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 100%;
+    }
+    .embed-container, .embed-body {
+        overflow: hidden;
+        background: #0f0f1a;
+    }
+    /* Hide scrollbar but allow scroll if needed */
+    .embed-body::-webkit-scrollbar { display: none; }
+    .embed-body { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Force tableau iframe to fill */
+    #tableauViz iframe {
+        width: 100% !important;
+        height: 100% !important;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .embed-container {
+            height: calc(100vh - 60px) !important;
+            margin: 0 !important;
+        }
+        .embed-body {
+            height: 100% !important;
+        }
+        #tableauViz {
+            min-height: calc(100vh - 60px) !important;
+        }
+        .error-box, .empty-dashboard {
+            min-height: 300px;
+            padding: 24px;
+        }
+        .error-box h3, .empty-dashboard h3 { font-size: 18px; }
+        .error-icon, .empty-icon { width: 80px; height: 80px; }
+        .error-icon i { font-size: 32px; }
+        .empty-icon i { font-size: 36px; }
+    }
 </style>
 @endsection
 
 @section('tableau-scripts')
 @if(isset($embed_url) && !empty($embed_url) && (!isset($failed) || !$failed))
-<script type="module" src="{{ $server ?? config('tableau.server') }}/javascripts/api/tableau.embedding.3.latest.min.js"></script>
+{{-- Load Tableau Embedding API v3 --}}
+<script type="module" src="{{ $server }}/javascripts/api/tableau.embedding.3.latest.min.js"></script>
 <script type="module">
     const viz = document.getElementById('tableauViz');
     const overlay = document.getElementById('loadingOverlay');
@@ -145,12 +190,15 @@
     }
     
     if (viz) {
+        // Event listener untuk Tableau Web Component
         viz.addEventListener('firstinteractive', hideOverlay);
-        viz.addEventListener('firstvizsizeknown', hideOverlay);
+        viz.addEventListener('firstvizsizeknown', () => {
+            console.log('Tableau viz size known');
+        });
     }
     
-    // Fallback timeout
-    setTimeout(hideOverlay, 8000);
+    // Fallback timeout jika event tidak terpanggil
+    setTimeout(hideOverlay, 10000);
 </script>
 @endif
 @endsection

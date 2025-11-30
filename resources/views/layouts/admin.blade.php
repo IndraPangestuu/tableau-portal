@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin') - Portal Korlantas</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/favicon.ico') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -44,9 +46,9 @@
         
         .logo { display: flex; align-items: center; gap: 14px; padding: 0 24px 28px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
         .logo-icon {
-            width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), var(--accent));
+            width: 50px; height: 50px; background: #ffffff;
             border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px;
-            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3); animation: logoGlow 3s ease-in-out infinite; position: relative; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); position: relative; overflow: hidden;
         }
         .logo-icon::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent); animation: logoShine 4s infinite; }
         @keyframes logoGlow { 0%, 100% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3); } 50% { box-shadow: 0 8px 48px rgba(34, 211, 238, 0.4); } }
@@ -109,6 +111,8 @@
         .btn-logout:hover { background: rgba(239, 68, 68, 0.3); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); }
         
         .content { padding: 28px 32px; }
+        .content:has(.embed-container) { padding: 0; }
+        .content .embed-container { border-radius: 0; border: none; height: calc(100vh - 77px); width: 100%; }
 
         /* Cards & Containers */
         .card {
@@ -129,9 +133,11 @@
             background: linear-gradient(135deg, rgba(20, 20, 40, 0.9), rgba(15, 15, 30, 0.95));
             border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            height: calc(100vh - 140px);
         }
-        .embed-body { position: relative; min-height: 800px; }
-        .embed-body iframe, .embed-body tableau-viz { display: block; width: 100%; height: 850px; min-height: 600px; border: none; }
+        .embed-body { position: relative; height: 100%; width: 100%; overflow: hidden; }
+        .embed-body iframe, .embed-body tableau-viz { display: block; width: 100%; height: 100%; border: none; }
+        tableau-viz { min-height: 100%; width: 100% !important; }
         
         .loading-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -244,7 +250,7 @@
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99; }
         .sidebar-overlay.active { display: block; }
         
-        @media (min-height: 900px) { .embed-body, .embed-body tableau-viz { height: calc(100vh - 120px); } }
+        @media (min-height: 900px) { .embed-container { height: calc(100vh - 120px); } }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-280px); }
             .sidebar.open { transform: translateX(0); }
@@ -253,7 +259,18 @@
             .form-row { grid-template-columns: 1fr; }
             .table { display: block; overflow-x: auto; }
             .content { padding: 20px 16px; }
-            .header { padding: 12px 16px; }
+            .header { padding: 8px 12px; flex-wrap: wrap; gap: 8px; }
+            .header-left { gap: 10px; }
+            .header-title h1 { font-size: 14px; }
+            .header-title p { font-size: 10px; display: none; }
+            .btn-toggle { width: 36px; height: 36px; font-size: 14px; }
+            .user-avatar { width: 32px; height: 32px; font-size: 12px; }
+            .user-info { padding: 4px 8px; }
+            .btn-logout { padding: 6px 10px; font-size: 11px; }
+            .btn-logout span { display: none; }
+            .content .embed-container { height: calc(100vh - 60px); }
+            .embed-body { height: 100%; }
+            tableau-viz, .embed-body iframe { height: 100% !important; min-height: calc(100vh - 60px); }
         }
         
         .animate-in { animation: fadeInUp 0.6s ease-out forwards; }
@@ -269,8 +286,11 @@
 
     <aside class="sidebar" id="sidebar">
         <div class="logo">
-            <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
-            <div class="logo-text">KORLANTAS<span>Dashboard Portal</span></div>
+            <div class="logo-icon">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; padding: 4px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <i class="fas fa-shield-alt" style="display: none; color: #6366f1;"></i>
+            </div>
+            <div class="logo-text">DAKGAR LANTAS<span>Dashboard Portal</span></div>
         </div>
         
         <ul class="nav-menu">

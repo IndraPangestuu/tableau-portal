@@ -8,7 +8,8 @@ return [
     'admin_password' => env('TABLEAU_ADMIN_PASSWORD', ''),
     
     // Default viewer untuk Trusted Auth (embed dashboard)
-    'viewer_username' => env('TABLEAU_VIEWER_USERNAME', 'korlantas_viewer_2'),
+    // Menggunakan admin_username sebagai default untuk embed
+    'viewer_username' => env('TABLEAU_ADMIN_USERNAME', 'korlantas'),
     
     // Default view path jika belum ada menu
     'default_view_path' => env('TABLEAU_DEFAULT_VIEW_PATH', '/views/home/01_SummaryDAKGARLANTAS3'),

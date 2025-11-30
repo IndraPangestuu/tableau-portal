@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $activeMenu->name ?? 'Dashboard' }} - Portal Korlantas</title>
 
+    {{-- Load Tableau Embedding API v3 --}}
+    <script type="module" src="{{ $server }}/javascripts/api/tableau.embedding.3.latest.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -28,6 +31,7 @@
             display: block;
             width: 100%;
             height: 100vh;
+            border: none;
         }
 
         .error-box {
@@ -65,6 +69,7 @@
             gap: 15px;
             z-index: 100;
             color: #fff;
+            transition: opacity 0.5s ease-out;
         }
 
         .spinner {
@@ -123,30 +128,30 @@
             <tableau-viz
                 id="tableauViz"
                 src="{{ $embed_url }}"
-                toolbar="bottom"
+                toolbar="hidden"
                 hide-tabs
             ></tableau-viz>
         @endif
     </div>
 
     @if(!$failed)
-    <script type="module" src="{{ $server }}/javascripts/api/tableau.embedding.3.latest.min.js"></script>
     <script type="module">
+        const viz = document.getElementById('tableauViz');
+        const overlay = document.getElementById('loadingOverlay');
+
         function hideLoading() {
-            const overlay = document.getElementById('loadingOverlay');
             if (overlay) {
-                overlay.style.display = 'none';
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.remove(), 500);
             }
         }
 
-        const viz = document.getElementById('tableauViz');
         if (viz) {
             viz.addEventListener('firstinteractive', hideLoading);
-            viz.addEventListener('firstvizsizeknown', hideLoading);
         }
 
         // Fallback timeout
-        setTimeout(hideLoading, 8000);
+        setTimeout(hideLoading, 10000);
     </script>
     @endif
 </body>
