@@ -74,6 +74,8 @@
         .nav-link.active { color: #fff; background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), transparent); border-left: 3px solid var(--accent); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2); }
         .nav-link i { width: 22px; text-align: center; font-size: 16px; transition: transform 0.3s; }
         .nav-link:hover i { transform: scale(1.2); }
+        .nav-divider { border-top: 1px solid var(--border); margin: 20px 16px; }
+        .nav-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; padding: 12px 18px 8px; font-weight: 600; }
         
         /* Submenu styles */
         .nav-parent { justify-content: space-between; }
@@ -257,6 +259,38 @@
                     <a href="{{ route('dashboard') }}" class="nav-link active"><i class="fas fa-home"></i> Dashboard</a>
                 </li>
             @endif
+            
+            {{-- Favorites & Recent Section --}}
+            @auth
+            @php
+                $userFavorites = auth()->user()->favorites()->with('menu')->limit(5)->get();
+                $recentDashboards = \App\Models\RecentDashboard::getRecent(auth()->user()->id_user, 5);
+            @endphp
+            
+            @if($userFavorites->count() > 0)
+            <li class="nav-divider"></li>
+            <li class="nav-label">Favorit</li>
+            @foreach($userFavorites as $fav)
+            <li class="nav-item">
+                <a href="{{ route('view.menu', $fav->menu) }}" class="nav-link {{ (isset($activeMenu) && $activeMenu->id == $fav->menu_id) ? 'active' : '' }}">
+                    <i class="fas fa-star" style="color: #fbbf24;"></i> {{ Str::limit($fav->menu->name, 20) }}
+                </a>
+            </li>
+            @endforeach
+            @endif
+            
+            @if($recentDashboards->count() > 0)
+            <li class="nav-divider"></li>
+            <li class="nav-label">Terakhir Diakses</li>
+            @foreach($recentDashboards as $recent)
+            <li class="nav-item">
+                <a href="{{ route('view.menu', $recent->menu) }}" class="nav-link {{ (isset($activeMenu) && $activeMenu->id == $recent->menu_id) ? 'active' : '' }}">
+                    <i class="fas fa-history" style="color: var(--text-muted);"></i> {{ Str::limit($recent->menu->name, 20) }}
+                </a>
+            </li>
+            @endforeach
+            @endif
+            @endauth
         </ul>
     </aside>
 

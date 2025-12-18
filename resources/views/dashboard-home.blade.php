@@ -14,6 +14,9 @@
         <button class="toolbar-btn" onclick="toggleFavorite({{ $activeMenu->id }})" id="favoriteBtn" title="Tambah ke Favorit">
             <i class="fa{{ isset($isFavorite) && $isFavorite ? 's' : 'r' }} fa-star"></i>
         </button>
+        <button class="toolbar-btn" onclick="exportToPDF()" title="Export ke PDF">
+            <i class="fas fa-file-pdf"></i>
+        </button>
         @if(isset($appSettings) && $appSettings['enable_fullscreen'])
         <button class="toolbar-btn" onclick="toggleFullscreen()" title="Fullscreen (F11)">
             <i class="fas fa-expand" id="fullscreenIcon"></i>
@@ -224,6 +227,25 @@
         .error-icon i { font-size: 32px; }
         .empty-icon i { font-size: 36px; }
     }
+    
+    /* Print styles for PDF export */
+    @media print {
+        body { background: white !important; }
+        .bg-animated, .particles, .sidebar, .header, .dashboard-toolbar, .sidebar-overlay, .swipe-indicator { display: none !important; }
+        .main-content { margin-left: 0 !important; }
+        .embed-container { 
+            height: 100vh !important; 
+            margin: 0 !important; 
+            background: white !important;
+            border: none !important;
+        }
+        .embed-body { height: 100% !important; }
+        #tableauViz, #tableauViz iframe { 
+            width: 100% !important; 
+            height: 100% !important; 
+        }
+        .loading-overlay { display: none !important; }
+    }
 </style>
 @endsection
 
@@ -316,6 +338,50 @@
         } else {
             location.reload();
         }
+    }
+    
+    // Export to PDF
+    function exportToPDF() {
+        const viz = document.getElementById('tableauViz');
+        
+        if (viz && viz.exportPDFAsync) {
+            Toast.info('Mempersiapkan PDF...');
+            viz.exportPDFAsync().then(() => {
+                Toast.success('PDF berhasil di-export');
+            }).catch((err) => {
+                console.error('Export PDF error:', err);
+                // Fallback: use Tableau's built-in export
+                exportPDFFallback();
+            });
+        } else {
+            exportPDFFallback();
+        }
+    }
+    
+    function exportPDFFallback() {
+        // Fallback method using browser print
+        Toast.info('Membuka dialog print untuk export PDF...');
+        
+        // Hide toolbar and sidebar temporarily
+        const toolbar = document.querySelector('.dashboard-toolbar');
+        const sidebar = document.querySelector('.sidebar');
+        const header = document.querySelector('.header');
+        
+        if (toolbar) toolbar.style.display = 'none';
+        if (sidebar) sidebar.style.display = 'none';
+        if (header) header.style.display = 'none';
+        
+        // Trigger print
+        setTimeout(() => {
+            window.print();
+            
+            // Restore elements
+            setTimeout(() => {
+                if (toolbar) toolbar.style.display = '';
+                if (sidebar) sidebar.style.display = '';
+                if (header) header.style.display = '';
+            }, 500);
+        }, 300);
     }
     
     // Keyboard shortcut F11 for fullscreen

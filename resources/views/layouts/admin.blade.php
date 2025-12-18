@@ -312,6 +312,7 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
     
     @include('components.toast')
+    @include('components.search-modal')
 
     <aside class="sidebar" id="sidebar">
         <div class="logo">
@@ -394,13 +395,14 @@
                 </div>
             </div>
             <div class="header-actions">
-                <div class="user-info">
+                <button class="btn-toggle" onclick="openSearch()" title="Cari Menu (Ctrl+K)" style="margin-right: 8px;"><i class="fas fa-search"></i></button>
+                <a href="{{ route('profile.show') }}" class="user-info" style="text-decoration: none;">
                     <div class="user-avatar">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</div>
                     <div class="user-details">
                         <span class="user-name">{{ Auth::user()->name ?? 'User' }}</span>
                         <span class="user-role">{{ ucfirst(Auth::user()->role ?? 'User') }}</span>
                     </div>
-                </div>
+                </a>
                 <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                     @csrf
                     <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></button>
