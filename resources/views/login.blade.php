@@ -7,7 +7,7 @@
     @if(isset($appSettings['app_favicon']) && $appSettings['app_favicon'])
     <link rel="icon" type="image/x-icon" href="{{ url($appSettings['app_favicon']) }}?v={{ time() }}">
     @else
-    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon.ico') }}">
     @endif
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
