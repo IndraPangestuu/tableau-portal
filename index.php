@@ -48,8 +48,17 @@ $app = require_once __DIR__.'/bootstrap/app.php';
 
 $kernel = $app->make(Kernel::class);
 
-$response = $kernel->handle(
-    $request = Request::capture()
-)->send();
+// Handle subdirectory installation
+$request = Request::capture();
+
+// Remove the subdirectory prefix from the request URI
+$baseDir = '/tableau-portal';
+$uri = $request->server->get('REQUEST_URI');
+if (strpos($uri, $baseDir) === 0) {
+    $newUri = substr($uri, strlen($baseDir)) ?: '/';
+    $request->server->set('REQUEST_URI', $newUri);
+}
+
+$response = $kernel->handle($request)->send();
 
 $kernel->terminate($request, $response);
