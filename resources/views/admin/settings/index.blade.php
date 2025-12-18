@@ -5,6 +5,13 @@
 @section('page-subtitle', 'Konfigurasi tampilan dan fitur aplikasi')
 
 @section('content')
+@if(session('success'))
+<div class="alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
+@endif
+@if(session('error'))
+<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> {{ session('error') }}</div>
+@endif
+
 <div class="card">
     <form action="{{ route('settings.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
@@ -45,16 +52,18 @@
                 @endif
                 <input type="file" name="app_logo" class="form-input" accept="image/*">
                 <span class="form-hint">Format: PNG, JPG, SVG. Maks: 2MB</span>
+                @error('app_logo')<span class="form-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>@enderror
             </div>
             <div class="form-group">
                 <label class="form-label">Favicon</label>
                 @if($settings['app_favicon'])
                 <div style="margin-bottom: 12px;">
-                    <img src="{{ url($settings['app_favicon']) }}" alt="Favicon" style="max-height: 32px;">
+                    <img src="{{ url($settings['app_favicon']) }}" alt="Favicon" style="max-height: 32px;" onerror="this.style.display='none'">
                 </div>
                 @endif
-                <input type="file" name="app_favicon" class="form-input" accept="image/png,image/x-icon">
-                <span class="form-hint">Format: PNG, ICO. Maks: 512KB</span>
+                <input type="file" name="app_favicon" class="form-input" accept=".png,.ico,.jpg,.jpeg,image/png,image/x-icon,image/jpeg">
+                <span class="form-hint">Format: PNG, JPG, ICO. Maks: 512KB</span>
+                @error('app_favicon')<span class="form-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>@enderror
             </div>
         </div>
 

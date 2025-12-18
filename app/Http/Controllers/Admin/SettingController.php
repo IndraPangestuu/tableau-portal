@@ -32,7 +32,7 @@ class SettingController extends Controller
             'footer_text' => 'nullable|string|max:100',
             'dashboard_refresh_interval' => 'nullable|integer|min:0|max:3600',
             'app_logo' => 'nullable|image|mimes:png,jpg,jpeg,svg|max:2048',
-            'app_favicon' => 'nullable|image|mimes:png,ico|max:512',
+            'app_favicon' => 'nullable|file|max:512',
         ]);
 
         // Text settings
@@ -64,22 +64,27 @@ class SettingController extends Controller
 
         // Handle favicon upload
         if ($request->hasFile('app_favicon')) {
-            $oldFavicon = Setting::get('app_favicon');
-            if ($oldFavicon && file_exists(base_path($oldFavicon))) {
-                @unlink(base_path($oldFavicon));
-            }
+            try {
+                $oldFavicon = Setting::get('app_favicon');
+                if ($oldFavicon && file_exists(base_path($oldFavicon))) {
+                    @unlink(base_path($oldFavicon));
+                }
 
-            $file = $request->file('app_favicon');
-            $filename = 'favicon_' . time() . '.' . $file->getClientOriginalExtension();
-            
-            // Create directory if not exists
-            $uploadPath = base_path('uploads/settings');
-            if (!is_dir($uploadPath)) {
-                mkdir($uploadPath, 0755, true);
+                $file = $request->file('app_favicon');
+                $ext = $file->getClientOriginalExtension() ?: 'png';
+                $filename = 'favicon_' . time() . '.' . $ext;
+                
+                // Create directory if not exists
+                $uploadPath = base_path('uploads/settings');
+                if (!is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
+                
+                $file->move($uploadPath, $filename);
+                Setting::set('app_favicon', 'uploads/settings/' . $filename);
+            } catch (\Exception $e) {
+                return redirect()->route('settings.index')->with('error', 'Gagal upload favicon: ' . $e->getMessage());
             }
-            
-            $file->move($uploadPath, $filename);
-            Setting::set('app_favicon', 'uploads/settings/' . $filename);
         }
 
         // Remove logo if requested

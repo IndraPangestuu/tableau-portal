@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - {{ $appSettings['app_name'] ?? 'Dashboard SIDAK LANTAS' }}</title>
     @if(isset($appSettings['app_favicon']) && $appSettings['app_favicon'])
-    <link rel="icon" type="image/png" href="{{ url($appSettings['app_favicon']) }}">
+    <link rel="icon" type="image/x-icon" href="{{ url($appSettings['app_favicon']) }}?v={{ time() }}">
     @else
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     @endif

@@ -6,8 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin') - {{ $appSettings['app_name'] ?? 'Portal Korlantas' }}</title>
     @if(isset($appSettings['app_favicon']) && $appSettings['app_favicon'])
-    <link rel="icon" type="image/png" href="{{ url($appSettings['app_favicon']) }}">
-    <link rel="shortcut icon" href="{{ url($appSettings['app_favicon']) }}">
+    <link rel="icon" type="image/x-icon" href="{{ url($appSettings['app_favicon']) }}?v={{ time() }}">
+    <link rel="shortcut icon" href="{{ url($appSettings['app_favicon']) }}?v={{ time() }}">
     @else
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     <link rel="shortcut icon" href="{{ asset('images/favicon.ico') }}">
