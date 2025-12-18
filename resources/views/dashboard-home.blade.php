@@ -256,7 +256,8 @@
 <script>
     // Toggle Favorite
     function toggleFavorite(menuId) {
-        fetch(`/favorites/${menuId}/toggle`, {
+        const baseUrl = '{{ url("/") }}';
+        fetch(`${baseUrl}/favorites/${menuId}/toggle`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -264,7 +265,10 @@
                 'Accept': 'application/json'
             }
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error('Network error');
+            return res.json();
+        })
         .then(data => {
             const btn = document.getElementById('favoriteBtn');
             const icon = btn.querySelector('i');
@@ -278,7 +282,10 @@
                 Toast.info('Dihapus dari favorit');
             }
         })
-        .catch(() => Toast.error('Gagal mengubah favorit'));
+        .catch((err) => {
+            console.error('Favorite error:', err);
+            Toast.error('Gagal mengubah favorit');
+        });
     }
     
     // Toggle Fullscreen
