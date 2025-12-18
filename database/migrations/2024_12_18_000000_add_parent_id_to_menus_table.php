@@ -8,17 +8,21 @@ class AddParentIdToMenusTable extends Migration
 {
     public function up()
     {
-        Schema::table('menus', function (Blueprint $table) {
-            $table->unsignedBigInteger('parent_id')->nullable()->after('id');
-            $table->foreign('parent_id')->references('id')->on('menus')->onDelete('cascade');
-        });
+        if (!Schema::hasColumn('menus', 'parent_id')) {
+            Schema::table('menus', function (Blueprint $table) {
+                $table->unsignedBigInteger('parent_id')->nullable()->after('id');
+                $table->foreign('parent_id')->references('id')->on('menus')->onDelete('cascade');
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('menus', function (Blueprint $table) {
-            $table->dropForeign(['parent_id']);
-            $table->dropColumn('parent_id');
-        });
+        if (Schema::hasColumn('menus', 'parent_id')) {
+            Schema::table('menus', function (Blueprint $table) {
+                $table->dropForeign(['parent_id']);
+                $table->dropColumn('parent_id');
+            });
+        }
     }
 }

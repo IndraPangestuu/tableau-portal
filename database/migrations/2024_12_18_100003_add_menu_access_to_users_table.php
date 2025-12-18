@@ -8,15 +8,19 @@ class AddMenuAccessToUsersTable extends Migration
 {
     public function up()
     {
-        Schema::table('user', function (Blueprint $table) {
-            $table->json('allowed_menus')->nullable()->after('user_role_id');
-        });
+        if (!Schema::hasColumn('user', 'allowed_menus')) {
+            Schema::table('user', function (Blueprint $table) {
+                $table->json('allowed_menus')->nullable()->after('user_role_id');
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('user', function (Blueprint $table) {
-            $table->dropColumn('allowed_menus');
-        });
+        if (Schema::hasColumn('user', 'allowed_menus')) {
+            Schema::table('user', function (Blueprint $table) {
+                $table->dropColumn('allowed_menus');
+            });
+        }
     }
 }
