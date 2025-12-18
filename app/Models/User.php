@@ -45,6 +45,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the role attribute based on user_role_id
+     * 1 = admin, 3 = user/viewer
+     */
+    public function getRoleAttribute()
+    {
+        return $this->user_role_id == 1 ? 'admin' : 'user';
+    }
+
+    /**
      * Check if user is admin
      */
     public function isAdmin()
