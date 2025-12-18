@@ -31,15 +31,23 @@ class AuthController extends Controller
             'password' => $password
         ];
 
-        if (Auth::attempt($credential)) {
+        if (Auth::attempt($credential, true)) {
             $request->session()->regenerate();
+            
+            $user = Auth::user();
             
             // Debug logging
             \Log::info('Login successful', [
-                'user_id' => Auth::id(),
+                'user_id' => $user ? $user->id : null,
+                'user_name' => $user ? $user->name : null,
                 'session_id' => session()->getId(),
-                'is_authenticated' => Auth::check()
+                'is_authenticated' => Auth::check(),
+                'auth_id' => Auth::id()
             ]);
+            
+            // Pastikan session tersimpan
+            $request->session()->put('auth_check', true);
+            $request->session()->save();
             
             return redirect()->intended(route('dashboard'));
         }
