@@ -16,8 +16,13 @@ class ViewServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Share menus to all views that use user layout
-        View::composer(['layouts.user', 'dashboard-home', 'embed'], function ($view) {
+        // Share menus to all views that use layouts
+        View::composer([
+            'layouts.user',
+            'layouts.admin',
+            'dashboard-home',
+            'embed'
+        ], function ($view) {
             $menus = $this->getCachedMenus();
             $view->with('sidebarMenus', $menus);
         });

@@ -290,6 +290,19 @@
         .animate-in { animation: fadeInUp 0.6s ease-out forwards; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* Page Transition */
+        .page-transition { animation: pageIn 0.4s ease-out; }
+        @keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Ripple Effect */
+        .ripple { position: relative; overflow: hidden; }
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.3); transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none; }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+        
+        /* Button Loading State */
+        .btn-loading { pointer-events: none; opacity: 0.7; }
+        .btn-loading::after { content: ''; width: 16px; height: 16px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 8px; }
+        
         @yield('styles')
     </style>
 </head>
@@ -297,6 +310,8 @@
     <div class="bg-animated"></div>
     <div class="particles" id="particles"></div>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    
+    @include('components.toast')
 
     <aside class="sidebar" id="sidebar">
         <div class="logo">
@@ -308,9 +323,8 @@
         </div>
         
         <ul class="nav-menu">
-            @php $menus = \App\Models\Menu::activeParentMenus()->get(); @endphp
-            @if($menus->count() > 0)
-                @foreach($menus as $m)
+            @if(isset($sidebarMenus) && $sidebarMenus->count() > 0)
+                @foreach($sidebarMenus as $m)
                     @if($m->activeChildren->count() > 0)
                     {{-- Parent menu with children --}}
                     <li class="nav-item has-submenu">
@@ -339,7 +353,7 @@
                 @endforeach
             @else
                 <li class="nav-item">
-                    <a href="/dashboard" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+                    <a href="{{ route('dashboard') }}" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
                 </li>
             @endif
             
@@ -389,19 +403,14 @@
             </div>
         </header>
 
-        <div class="content">
-            @if(session('success'))
-                <div class="alert alert-success"><i class="fas fa-check-circle"></i> <span>{{ session('success') }}</span> <button class="alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div>
-            @endif
-            @if(session('error'))
-                <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <span>{{ session('error') }}</span> <button class="alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div>
-            @endif
+        <div class="content page-transition">
             @yield('content')
         </div>
     </main>
 
     @yield('tableau-scripts')
     <script>
+        // Particles
         function createParticles() {
             const container = document.getElementById('particles');
             for (let i = 0; i < 25; i++) {
@@ -415,7 +424,8 @@
         }
         createParticles();
         
-        let sidebarOpen = true;
+        // Sidebar Toggle
+        let sidebarOpen = window.innerWidth > 768;
         function toggleSidebar() {
             sidebarOpen = !sidebarOpen;
             document.getElementById('sidebar').classList.toggle('collapsed', !sidebarOpen);
@@ -427,19 +437,34 @@
                 document.getElementById('sidebarOverlay').classList.toggle('active', sidebarOpen);
                 document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
             }
+            localStorage.setItem('sidebarOpen', sidebarOpen);
         }
         
+        // Restore sidebar state
+        const savedSidebarState = localStorage.getItem('sidebarOpen');
+        if (savedSidebarState !== null && window.innerWidth > 768) {
+            sidebarOpen = savedSidebarState === 'true';
+            if (!sidebarOpen) {
+                document.getElementById('sidebar').classList.add('collapsed');
+                document.getElementById('mainContent').classList.add('expanded');
+                document.getElementById('toggleIcon').classList.replace('fa-times', 'fa-bars');
+            }
+        }
+        
+        // Loading
         function hideLoading() {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 500); }
         }
         setTimeout(hideLoading, 5000);
         
+        // Card Animation Observer
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('animate-in'); });
         }, { threshold: 0.1 });
         document.querySelectorAll('.card').forEach(el => observer.observe(el));
         
+        // Submenu
         function toggleSubmenu(el) {
             const parent = el.closest('.has-submenu');
             parent.classList.toggle('open');
@@ -448,6 +473,77 @@
         // Auto-open submenu if child is active
         document.querySelectorAll('.submenu .nav-link.active').forEach(el => {
             el.closest('.has-submenu').classList.add('open');
+        });
+        
+        // Swipe Gesture for Mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const swipeThreshold = 80;
+        
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+        
+        function handleSwipe() {
+            const swipeDistance = touchEndX - touchStartX;
+            if (swipeDistance > swipeThreshold && touchStartX < 50 && !sidebarOpen) {
+                toggleSidebar();
+            } else if (swipeDistance < -swipeThreshold && sidebarOpen && window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+        
+        // Ripple Effect
+        document.querySelectorAll('.nav-link, .btn, .btn-toggle, .btn-logout').forEach(el => {
+            el.classList.add('ripple');
+            el.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+        
+        // Form Submit Loading State
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                const btn = this.querySelector('button[type="submit"]');
+                if (btn && !btn.classList.contains('btn-loading')) {
+                    btn.classList.add('btn-loading');
+                }
+            });
+        });
+        
+        // Delete Confirmation
+        document.querySelectorAll('form[data-confirm]').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!confirm(this.dataset.confirm || 'Apakah Anda yakin?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        // Page visibility - pause animations when hidden
+        document.addEventListener('visibilitychange', () => {
+            const particles = document.getElementById('particles');
+            const bgAnimated = document.querySelector('.bg-animated');
+            if (document.hidden) {
+                particles.style.animationPlayState = 'paused';
+                bgAnimated.style.animationPlayState = 'paused';
+            } else {
+                particles.style.animationPlayState = 'running';
+                bgAnimated.style.animationPlayState = 'running';
+            }
         });
     </script>
     @yield('scripts')

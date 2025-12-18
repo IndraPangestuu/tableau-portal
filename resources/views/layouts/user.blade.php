@@ -187,6 +187,21 @@
             tableau-viz, .embed-body iframe { height: 100% !important; min-height: calc(100vh - 60px); }
         }
         
+        /* Page Transition */
+        .page-transition { animation: pageIn 0.4s ease-out; }
+        @keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Ripple Effect */
+        .ripple { position: relative; overflow: hidden; }
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.3); transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none; }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+        
+        /* Swipe Indicator */
+        .swipe-indicator { position: fixed; left: 0; top: 50%; transform: translateY(-50%); width: 20px; height: 100px; z-index: 98; display: none; }
+        @media (max-width: 768px) { .swipe-indicator { display: block; } }
+        .swipe-indicator::after { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 40px; background: linear-gradient(180deg, transparent, var(--accent), transparent); border-radius: 2px; opacity: 0.3; animation: swipeHint 2s ease-in-out infinite; }
+        @keyframes swipeHint { 0%, 100% { opacity: 0.1; transform: translateY(-50%) translateX(0); } 50% { opacity: 0.4; transform: translateY(-50%) translateX(8px); } }
+        
         @yield('styles')
     </style>
 </head>
@@ -194,6 +209,9 @@
     <div class="bg-animated"></div>
     <div class="particles" id="particles"></div>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="swipe-indicator" id="swipeIndicator"></div>
+    
+    @include('components.toast')
 
     <aside class="sidebar" id="sidebar">
         <div class="logo">
@@ -270,6 +288,7 @@
 
     @yield('tableau-scripts')
     <script>
+        // Particles
         function createParticles() {
             const container = document.getElementById('particles');
             for (let i = 0; i < 25; i++) {
@@ -283,7 +302,8 @@
         }
         createParticles();
         
-        let sidebarOpen = true;
+        // Sidebar Toggle
+        let sidebarOpen = window.innerWidth > 768;
         function toggleSidebar() {
             sidebarOpen = !sidebarOpen;
             document.getElementById('sidebar').classList.toggle('collapsed', !sidebarOpen);
@@ -295,14 +315,29 @@
                 document.getElementById('sidebarOverlay').classList.toggle('active', sidebarOpen);
                 document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
             }
+            // Save preference
+            localStorage.setItem('sidebarOpen', sidebarOpen);
         }
         
+        // Restore sidebar state
+        const savedSidebarState = localStorage.getItem('sidebarOpen');
+        if (savedSidebarState !== null && window.innerWidth > 768) {
+            sidebarOpen = savedSidebarState === 'true';
+            if (!sidebarOpen) {
+                document.getElementById('sidebar').classList.add('collapsed');
+                document.getElementById('mainContent').classList.add('expanded');
+                document.getElementById('toggleIcon').classList.replace('fa-times', 'fa-bars');
+            }
+        }
+        
+        // Loading
         function hideLoading() {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 500); }
         }
         setTimeout(hideLoading, 5000);
         
+        // Submenu
         function toggleSubmenu(el) {
             const parent = el.closest('.has-submenu');
             parent.classList.toggle('open');
@@ -311,6 +346,62 @@
         // Auto-open submenu if child is active
         document.querySelectorAll('.submenu .nav-link.active').forEach(el => {
             el.closest('.has-submenu').classList.add('open');
+        });
+        
+        // Swipe Gesture for Mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const swipeThreshold = 80;
+        
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+        
+        function handleSwipe() {
+            const swipeDistance = touchEndX - touchStartX;
+            
+            // Swipe right to open sidebar (from left edge)
+            if (swipeDistance > swipeThreshold && touchStartX < 50 && !sidebarOpen) {
+                toggleSidebar();
+            }
+            // Swipe left to close sidebar
+            else if (swipeDistance < -swipeThreshold && sidebarOpen && window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+        
+        // Ripple Effect
+        document.querySelectorAll('.nav-link, .btn-toggle, .btn-logout').forEach(el => {
+            el.classList.add('ripple');
+            el.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+        
+        // Page visibility - pause animations when hidden
+        document.addEventListener('visibilitychange', () => {
+            const particles = document.getElementById('particles');
+            const bgAnimated = document.querySelector('.bg-animated');
+            if (document.hidden) {
+                particles.style.animationPlayState = 'paused';
+                bgAnimated.style.animationPlayState = 'paused';
+            } else {
+                particles.style.animationPlayState = 'running';
+                bgAnimated.style.animationPlayState = 'running';
+            }
         });
     </script>
     @yield('scripts')
