@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class TableauEmbedService
@@ -11,12 +12,14 @@ class TableauEmbedService
     protected $siteId;
     protected $token;
     protected $siteContentUrl;
+    protected $cacheTtl;
 
     public function __construct()
     {
         $this->server = config('tableau.server');
         $this->apiVersion = config('tableau.api_version');
         $this->siteId = config('tableau.site_id');
+        $this->cacheTtl = config('tableau.cache_ttl', 300);
     }
 
     public function getTrustedUrl(string $username, string $viewPath)
@@ -206,9 +209,21 @@ class TableauEmbedService
     }
 
     /**
-     * Ambil semua views dari Tableau Server
+     * Ambil semua views dari Tableau Server (dengan caching)
      */
     public function getAllViews($siteContentUrl = null)
+    {
+        $cacheKey = 'tableau_views_' . ($siteContentUrl ?: 'default');
+
+        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($siteContentUrl) {
+            return $this->fetchAllViews($siteContentUrl);
+        });
+    }
+
+    /**
+     * Fetch views dari Tableau API (tanpa cache)
+     */
+    protected function fetchAllViews($siteContentUrl = null)
     {
         $auth = $this->signIn($siteContentUrl);
         if (!$auth['success']) {
@@ -257,9 +272,19 @@ class TableauEmbedService
     }
 
     /**
-     * Ambil daftar semua sites yang tersedia
+     * Ambil daftar semua sites yang tersedia (dengan caching)
      */
     public function getSites()
+    {
+        return Cache::remember('tableau_sites', $this->cacheTtl, function () {
+            return $this->fetchSites();
+        });
+    }
+
+    /**
+     * Fetch sites dari Tableau API (tanpa cache)
+     */
+    protected function fetchSites()
     {
         $auth = $this->signIn();
         if (!$auth['success']) {
@@ -288,6 +313,19 @@ class TableauEmbedService
 
         Log::error('Tableau API Get Sites Failed', ['response' => $response]);
         return ['success' => false, 'error' => 'Gagal mengambil daftar sites', 'sites' => []];
+    }
+
+    /**
+     * Clear Tableau API cache
+     */
+    public function clearCache(): void
+    {
+        Cache::forget('tableau_sites');
+        // Clear all views cache with pattern
+        $keys = Cache::get('tableau_cache_keys', []);
+        foreach ($keys as $key) {
+            Cache::forget($key);
+        }
     }
 
     /**

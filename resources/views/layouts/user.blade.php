@@ -205,9 +205,8 @@
         </div>
         
         <ul class="nav-menu">
-            @php $menus = \App\Models\Menu::activeParentMenus()->get(); @endphp
-            @if($menus->count() > 0)
-                @foreach($menus as $m)
+            @if(isset($sidebarMenus) && $sidebarMenus->count() > 0)
+                @foreach($sidebarMenus as $m)
                     @if($m->activeChildren->count() > 0)
                     {{-- Parent menu with children --}}
                     <li class="nav-item has-submenu">
@@ -236,7 +235,7 @@
                 @endforeach
             @else
                 <li class="nav-item">
-                    <a href="/dashboard" class="nav-link active"><i class="fas fa-home"></i> Dashboard</a>
+                    <a href="{{ route('dashboard') }}" class="nav-link active"><i class="fas fa-home"></i> Dashboard</a>
                 </li>
             @endif
         </ul>

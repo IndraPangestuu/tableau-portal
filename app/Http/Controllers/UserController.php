@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -20,17 +20,8 @@ class UserController extends Controller
         return view('admin.users.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $request->validate([
-            'nama' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:user',
-            'telp' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:user',
-            'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:admin,user',
-        ]);
-
         User::create([
             'nama' => $request->nama,
             'username' => $request->username,
@@ -50,17 +41,8 @@ class UserController extends Controller
         return view('admin.users.edit', compact('user'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $request->validate([
-            'nama' => 'required|string|max:255',
-            'username' => ['required', 'string', 'max:255', Rule::unique('user')->ignore($user->id_user, 'id_user')],
-            'telp' => 'nullable|string|max:255',
-            'email' => ['nullable', 'email', Rule::unique('user')->ignore($user->id_user, 'id_user')],
-            'password' => 'nullable|string|min:6|confirmed',
-            'role' => 'required|in:admin,user',
-        ]);
-
         $data = [
             'nama' => $request->nama,
             'username' => $request->username,
