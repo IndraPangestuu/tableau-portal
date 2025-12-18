@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Dashboard - Korlantas POLRI</title>
+    <title>{{ $appSettings['app_name'] ?? 'Portal Dashboard' }} - {{ $appSettings['footer_text'] ?? 'Korlantas POLRI' }}</title>
+    @if(isset($appSettings['app_favicon']) && $appSettings['app_favicon'])
+    <link rel="icon" type="image/png" href="{{ url($appSettings['app_favicon']) }}">
+    @else
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+    @endif
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -430,11 +435,15 @@
     <nav class="navbar">
         <div class="logo">
             <div class="logo-icon">
+                @if(isset($appSettings['app_logo']) && $appSettings['app_logo'])
+                <img src="{{ url($appSettings['app_logo']) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                @else
                 <i class="fas fa-shield-alt"></i>
+                @endif
             </div>
             <div class="logo-text">
-                KORLANTAS
-                <span>Dashboard Portal</span>
+                {{ $appSettings['app_name'] ?? 'KORLANTAS' }}
+                <span>{{ $appSettings['app_subtitle'] ?? 'Dashboard Portal' }}</span>
             </div>
         </div>
         <div class="nav-links">
@@ -457,7 +466,7 @@
             <div class="hero-badge">
                 <i class="fas fa-chart-line"></i> Dashboard Analytics Platform
             </div>
-            <h1>Portal Dashboard <span>Korlantas POLRI</span></h1>
+            <h1>{{ $appSettings['app_name'] ?? 'Portal Dashboard' }} <span>{{ $appSettings['footer_text'] ?? 'Korlantas POLRI' }}</span></h1>
             <p>Sistem informasi dashboard terintegrasi untuk monitoring dan analisis data lalu lintas secara real-time. Akses data ETLE, tilang, dan statistik kecelakaan dalam satu platform.</p>
             <div class="hero-buttons">
                 <a href="{{ route('login') }}" class="btn-primary">
@@ -554,7 +563,7 @@
     <!-- Footer -->
     <footer class="footer" id="about">
         <div class="footer-text">
-            &copy; {{ date('Y') }} Portal Dashboard Korlantas POLRI. All rights reserved.
+            &copy; {{ date('Y') }} {{ $appSettings['app_name'] ?? 'Portal Dashboard' }} {{ $appSettings['footer_text'] ?? 'Korlantas POLRI' }}. All rights reserved.
         </div>
         <div class="footer-links">
             <a href="#">Kebijakan Privasi</a>

@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin') - Portal Korlantas</title>
+    <title>@yield('title', 'Admin') - {{ $appSettings['app_name'] ?? 'Portal Korlantas' }}</title>
+    @if(isset($appSettings['app_favicon']) && $appSettings['app_favicon'])
+    <link rel="icon" type="image/png" href="{{ url($appSettings['app_favicon']) }}">
+    <link rel="shortcut icon" href="{{ url($appSettings['app_favicon']) }}">
+    @else
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     <link rel="shortcut icon" href="{{ asset('images/favicon.ico') }}">
+    @endif
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -317,10 +322,14 @@
     <aside class="sidebar" id="sidebar">
         <div class="logo">
             <div class="logo-icon">
+                @if(isset($appSettings['app_logo']) && $appSettings['app_logo'])
+                <img src="{{ url($appSettings['app_logo']) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; padding: 4px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                @else
                 <img src="{{ asset('images/logo.png') }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; padding: 4px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                @endif
                 <i class="fas fa-shield-alt" style="display: none; color: #6366f1;"></i>
             </div>
-            <div class="logo-text">DAKGAR LANTAS<span>Dashboard Portal</span></div>
+            <div class="logo-text">{{ $appSettings['app_name'] ?? 'DAKGAR LANTAS' }}<span>{{ $appSettings['app_subtitle'] ?? 'Dashboard Portal' }}</span></div>
         </div>
         
         <ul class="nav-menu">
