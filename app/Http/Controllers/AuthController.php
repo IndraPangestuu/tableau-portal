@@ -22,9 +22,8 @@ class AuthController extends Controller
         $login = $request->input('login');
         $password = $request->input('password');
 
-        // Cek apakah login pakai username atau NRP
-        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 
-                     (is_numeric($login) ? 'nrp' : 'username');
+        // Cek apakah login pakai email atau username
+        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
         $credential = [
             $fieldType => $login,

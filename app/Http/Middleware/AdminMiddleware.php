@@ -9,7 +9,7 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!auth()->check() || auth()->user()->role !== 'admin') {
+        if (!auth()->check() || !auth()->user()->isAdmin()) {
             abort(403, 'Akses ditolak. Hanya admin yang bisa mengakses halaman ini.');
         }
 
