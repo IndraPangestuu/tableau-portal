@@ -13,16 +13,11 @@ class User extends Authenticatable
 
     protected $table = 'user';
     protected $primaryKey = 'id_user';
-    
-    // Tidak ada timestamps di tabel
+
     public $timestamps = false;
-    
-    // Tidak ada remember_token di tabel, gunakan kolom login_session_key
+
     protected $rememberTokenName = 'login_session_key';
 
-    /**
-     * Get the route key for the model (untuk route model binding)
-     */
     public function getRouteKeyName()
     {
         return 'id_user';
@@ -37,6 +32,7 @@ class User extends Authenticatable
         'foto',
         'account_status',
         'user_role_id',
+        'allowed_menus',
     ];
 
     protected $hidden = [
@@ -44,28 +40,99 @@ class User extends Authenticatable
         'login_session_key',
     ];
 
-    /**
-     * Get the name attribute (alias untuk 'nama')
-     */
+    protected $casts = [
+        'allowed_menus' => 'array',
+    ];
+
     public function getNameAttribute()
     {
         return $this->nama;
     }
 
-    /**
-     * Get the role attribute based on user_role_id
-     * 1 = admin, 3 = user/viewer
-     */
     public function getRoleAttribute()
     {
         return $this->user_role_id == 1 ? 'admin' : 'user';
     }
 
-    /**
-     * Check if user is admin
-     */
     public function isAdmin()
     {
         return $this->user_role_id == 1;
+    }
+
+    /**
+     * Get user's favorite menus
+     */
+    public function favorites()
+    {
+        return $this->hasMany(UserFavorite::class, 'user_id', 'id_user');
+    }
+
+    /**
+     * Get user's recent dashboards
+     */
+    public function recentDashboards()
+    {
+        return $this->hasMany(RecentDashboard::class, 'user_id', 'id_user');
+    }
+
+    /**
+     * Check if user can access a menu
+     */
+    public function canAccessMenu(int $menuId): bool
+    {
+        // Admin can access all menus
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        // If no restrictions set, allow all
+        if (empty($this->allowed_menus)) {
+            return true;
+        }
+
+        return in_array($menuId, $this->allowed_menus);
+    }
+
+    /**
+     * Get accessible menus for user
+     */
+    public function getAccessibleMenus()
+    {
+        if ($this->isAdmin() || empty($this->allowed_menus)) {
+            return Menu::activeParentMenus()->get();
+        }
+
+        return Menu::activeParentMenus()
+            ->where(function ($query) {
+                $query->whereIn('id', $this->allowed_menus)
+                    ->orWhereHas('children', function ($q) {
+                        $q->whereIn('id', $this->allowed_menus);
+                    });
+            })
+            ->get();
+    }
+
+    /**
+     * Check if menu is favorite
+     */
+    public function hasFavorite(int $menuId): bool
+    {
+        return $this->favorites()->where('menu_id', $menuId)->exists();
+    }
+
+    /**
+     * Toggle favorite menu
+     */
+    public function toggleFavorite(int $menuId): bool
+    {
+        $favorite = $this->favorites()->where('menu_id', $menuId)->first();
+
+        if ($favorite) {
+            $favorite->delete();
+            return false;
+        }
+
+        $this->favorites()->create(['menu_id' => $menuId]);
+        return true;
     }
 }

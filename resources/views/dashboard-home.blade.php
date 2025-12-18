@@ -5,6 +5,26 @@
 @section('page-subtitle', 'Selamat datang di Portal Dashboard Korlantas')
 
 @section('content')
+@if(isset($activeMenu) && $activeMenu)
+<div class="dashboard-toolbar">
+    <div class="toolbar-left">
+        <span class="toolbar-title"><i class="{{ $activeMenu->icon ?? 'fas fa-chart-bar' }}"></i> {{ $activeMenu->name }}</span>
+    </div>
+    <div class="toolbar-right">
+        <button class="toolbar-btn" onclick="toggleFavorite({{ $activeMenu->id }})" id="favoriteBtn" title="Tambah ke Favorit">
+            <i class="fa{{ isset($isFavorite) && $isFavorite ? 's' : 'r' }} fa-star"></i>
+        </button>
+        @if(isset($appSettings) && $appSettings['enable_fullscreen'])
+        <button class="toolbar-btn" onclick="toggleFullscreen()" title="Fullscreen (F11)">
+            <i class="fas fa-expand" id="fullscreenIcon"></i>
+        </button>
+        @endif
+        <button class="toolbar-btn" onclick="refreshDashboard()" title="Refresh">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
+</div>
+@endif
 <div class="embed-container">
     <div class="embed-body" id="embedBody">
         @if(isset($failed) && $failed)
@@ -59,6 +79,39 @@
 
 @section('styles')
 <style>
+    .dashboard-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px;
+        background: rgba(15, 15, 30, 0.6);
+        border-bottom: 1px solid var(--border);
+    }
+    .toolbar-left { display: flex; align-items: center; gap: 12px; }
+    .toolbar-title { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .toolbar-title i { color: var(--accent); }
+    .toolbar-right { display: flex; align-items: center; gap: 8px; }
+    .toolbar-btn {
+        width: 36px; height: 36px; border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s;
+    }
+    .toolbar-btn:hover { background: rgba(99, 102, 241, 0.2); color: var(--accent); border-color: rgba(99, 102, 241, 0.3); }
+    .toolbar-btn.active { color: #fbbf24; }
+    .toolbar-btn.active i { color: #fbbf24; }
+    
+    .embed-container { height: calc(100vh - 125px) !important; }
+    @media (max-width: 768px) {
+        .dashboard-toolbar { padding: 8px 12px; }
+        .toolbar-title { font-size: 12px; }
+        .toolbar-btn { width: 32px; height: 32px; }
+        .embed-container { height: calc(100vh - 105px) !important; }
+    }
+    
     .error-box {
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         min-height: 500px; padding: 48px; text-align: center;
@@ -190,15 +243,92 @@
     }
     
     if (viz) {
-        // Event listener untuk Tableau Web Component
         viz.addEventListener('firstinteractive', hideOverlay);
         viz.addEventListener('firstvizsizeknown', () => {
             console.log('Tableau viz size known');
         });
     }
     
-    // Fallback timeout jika event tidak terpanggil
     setTimeout(hideOverlay, 10000);
 </script>
 @endif
+
+<script>
+    // Toggle Favorite
+    function toggleFavorite(menuId) {
+        fetch(`/favorites/${menuId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const btn = document.getElementById('favoriteBtn');
+            const icon = btn.querySelector('i');
+            if (data.is_favorite) {
+                icon.classList.replace('far', 'fas');
+                btn.classList.add('active');
+                Toast.success('Ditambahkan ke favorit');
+            } else {
+                icon.classList.replace('fas', 'far');
+                btn.classList.remove('active');
+                Toast.info('Dihapus dari favorit');
+            }
+        })
+        .catch(() => Toast.error('Gagal mengubah favorit'));
+    }
+    
+    // Toggle Fullscreen
+    function toggleFullscreen() {
+        const elem = document.documentElement;
+        const icon = document.getElementById('fullscreenIcon');
+        
+        if (!document.fullscreenElement) {
+            elem.requestFullscreen().then(() => {
+                icon.classList.replace('fa-expand', 'fa-compress');
+            }).catch(err => Toast.error('Gagal masuk fullscreen'));
+        } else {
+            document.exitFullscreen().then(() => {
+                icon.classList.replace('fa-compress', 'fa-expand');
+            });
+        }
+    }
+    
+    // Refresh Dashboard
+    function refreshDashboard() {
+        const viz = document.getElementById('tableauViz');
+        if (viz && viz.refreshDataAsync) {
+            viz.refreshDataAsync().then(() => {
+                Toast.success('Dashboard di-refresh');
+            }).catch(() => {
+                location.reload();
+            });
+        } else {
+            location.reload();
+        }
+    }
+    
+    // Keyboard shortcut F11 for fullscreen
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F11') {
+            e.preventDefault();
+            toggleFullscreen();
+        }
+    });
+    
+    // Auto refresh if configured
+    @if(isset($appSettings) && $appSettings['dashboard_refresh_interval'] > 0)
+    setInterval(function() {
+        refreshDashboard();
+    }, {{ $appSettings['dashboard_refresh_interval'] * 1000 }});
+    @endif
+    
+    // Update favorite button state
+    @if(isset($isFavorite) && $isFavorite)
+    document.getElementById('favoriteBtn')?.classList.add('active');
+    @endif
+</script>
 @endsection

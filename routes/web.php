@@ -31,6 +31,16 @@ Route::get('/dashboard', [App\Http\Controllers\EmbedController::class, 'dashboar
 // View dashboard by menu
 Route::get('/view/{menu}', [App\Http\Controllers\EmbedController::class, 'viewMenu'])->middleware('auth')->name('view.menu');
 
+// User Profile & Favorites
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/favorites/{menu}/toggle', [App\Http\Controllers\FavoriteController::class, 'toggle'])->name('favorites.toggle');
+    Route::get('/favorites', [App\Http\Controllers\FavoriteController::class, 'index'])->name('favorites.index');
+    Route::get('/search/menus', [App\Http\Controllers\SearchController::class, 'menus'])->name('search.menus');
+});
+
 // Admin - User & Menu Management
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Users
@@ -58,4 +68,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/backups/{filename}/download', [App\Http\Controllers\Admin\BackupController::class, 'download'])->name('backups.download');
     Route::post('/backups/{filename}/restore', [App\Http\Controllers\Admin\BackupController::class, 'restore'])->name('backups.restore');
     Route::delete('/backups/{filename}', [App\Http\Controllers\Admin\BackupController::class, 'destroy'])->name('backups.destroy');
+
+    // Settings
+    Route::get('/settings', [App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
+
+    // User Menu Access
+    Route::get('/users/{user}/menus', [App\Http\Controllers\UserController::class, 'editMenuAccess'])->name('users.menus');
+    Route::put('/users/{user}/menus', [App\Http\Controllers\UserController::class, 'updateMenuAccess'])->name('users.menus.update');
 });

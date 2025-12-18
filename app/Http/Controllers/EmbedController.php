@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
+use App\Models\RecentDashboard;
 use App\Services\TableauEmbedService;
 
 class EmbedController extends Controller
@@ -122,12 +123,21 @@ class EmbedController extends Controller
             abort(404);
         }
 
+        // Check user access
+        $user = auth()->user();
+        if (!$user->canAccessMenu($menu->id)) {
+            abort(403, 'Anda tidak memiliki akses ke menu ini.');
+        }
+
         $menus = Menu::active()->get();
 
         // Check if menu has valid view path
         if (empty($menu->tableau_view_path)) {
             return $this->noMenuResponse('dashboard-home', $menus, 'Menu ini tidak memiliki Tableau view path yang valid.');
         }
+
+        // Record recent dashboard access
+        RecentDashboard::recordAccess($user->id_user, $menu->id);
 
         $username = $menu->tableau_username ?: $this->getDefaultUsername();
         $viewPath = $menu->tableau_view_path;
@@ -141,7 +151,8 @@ class EmbedController extends Controller
             'error_message' => $data['error_message'],
             'server' => config('tableau.server'),
             'menus' => $menus,
-            'activeMenu' => $menu
+            'activeMenu' => $menu,
+            'isFavorite' => $user->hasFavorite($menu->id)
         ]);
     }
 }

@@ -99,10 +99,11 @@
                     <td><span class="badge badge-{{ $user->role }}">{{ ucfirst($user->role) }}</span></td>
                     <td>
                         <div class="actions">
-                            <a href="{{ route('users.edit', $user) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                            <a href="{{ route('users.menus', $user) }}" class="btn btn-secondary btn-sm" title="Akses Menu"><i class="fas fa-key"></i></a>
+                            <a href="{{ route('users.edit', $user) }}" class="btn btn-warning btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
                             <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Yakin hapus user ini?')">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                <button type="submit" class="btn btn-danger btn-sm" title="Hapus"><i class="fas fa-trash"></i></button>
                             </form>
                         </div>
                     </td>

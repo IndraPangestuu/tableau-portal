@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\Menu;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -68,5 +70,25 @@ class UserController extends Controller
 
         $user->delete();
         return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
+    }
+
+    public function editMenuAccess(User $user)
+    {
+        $menus = Menu::with('children')->parentMenus()->get();
+        $allowedMenus = $user->allowed_menus ?? [];
+
+        return view('admin.users.menus', compact('user', 'menus', 'allowedMenus'));
+    }
+
+    public function updateMenuAccess(Request $request, User $user)
+    {
+        $allowedMenus = $request->input('menus', []);
+
+        // Empty array means all access
+        $user->update([
+            'allowed_menus' => empty($allowedMenus) ? null : array_map('intval', $allowedMenus),
+        ]);
+
+        return redirect()->route('users.index')->with('success', 'Akses menu user berhasil diperbarui.');
     }
 }

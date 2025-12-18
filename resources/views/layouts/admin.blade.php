@@ -375,6 +375,11 @@
                     <i class="fas fa-database"></i> Backup Database
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                    <i class="fas fa-cog"></i> Pengaturan
+                </a>
+            </li>
             @endif
         </ul>
     </aside>
