@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 */
 // Halaman home (landing page)
 Route::get('/', function () {
-    return auth()->check() ? redirect('/dashboard') : view('home');
+    return auth()->check() ? redirect()->route('dashboard') : view('home');
 })->name('home');
 
 // halaman sebelum login
@@ -23,10 +23,10 @@ Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
 Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
 // halaman embed tableau
-Route::get('/embed', [App\Http\Controllers\EmbedController::class, 'show'])->middleware('auth');
+Route::get('/embed', [App\Http\Controllers\EmbedController::class, 'show'])->middleware('auth')->name('embed');
 
 // halaman setelah login
-Route::get('/dashboard', [App\Http\Controllers\EmbedController::class, 'dashboard'])->middleware('auth');
+Route::get('/dashboard', [App\Http\Controllers\EmbedController::class, 'dashboard'])->middleware('auth')->name('dashboard');
 
 // View dashboard by menu
 Route::get('/view/{menu}', [App\Http\Controllers\EmbedController::class, 'viewMenu'])->middleware('auth')->name('view.menu');
