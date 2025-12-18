@@ -254,10 +254,13 @@
             });
     }
 
+    let filteredViews = [];
+
     function renderViews(views) {
+        filteredViews = views;
         const list = document.getElementById('viewsList');
         list.innerHTML = views.map((v, i) => `
-            <div class="view-item" onclick="selectView(${i})">
+            <div class="view-item" data-view-path="${v.viewPath}" onclick="selectView('${v.viewPath}')">
                 <div>
                     <div class="view-name">${v.name}</div>
                     <div class="view-workbook"><i class="fas fa-folder"></i> ${v.workbook}</div>
@@ -277,15 +280,15 @@
         renderViews(filtered);
     }
 
-    function selectView(index) {
-        const items = document.querySelectorAll('.view-item');
-        const viewPath = items[index]?.querySelector('.view-path')?.textContent;
+    function selectView(viewPath) {
         const view = allViews.find(v => v.viewPath === viewPath);
 
         if (view) {
             document.getElementById('menuName').value = view.name;
             document.getElementById('viewPath').value = view.viewPath;
-            items.forEach((el, i) => el.classList.toggle('selected', i === index));
+            document.querySelectorAll('.view-item').forEach(el => {
+                el.classList.toggle('selected', el.dataset.viewPath === viewPath);
+            });
         }
     }
 

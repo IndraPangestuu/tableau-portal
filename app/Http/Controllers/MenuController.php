@@ -27,7 +27,7 @@ class MenuController extends Controller
             'tableau_view_path' => 'required|string|max:500',
             'tableau_username' => 'nullable|string|max:255',
             'order' => 'nullable|integer',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable',
         ]);
 
         Menu::create([
@@ -55,7 +55,7 @@ class MenuController extends Controller
             'tableau_view_path' => 'required|string|max:500',
             'tableau_username' => 'nullable|string|max:255',
             'order' => 'nullable|integer',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable',
         ]);
 
         $menu->update([
