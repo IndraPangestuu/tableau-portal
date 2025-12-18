@@ -40,13 +40,20 @@ class ProfileController extends Controller
 
         if ($request->hasFile('foto')) {
             // Delete old photo
-            if ($user->foto && file_exists(public_path($user->foto))) {
-                unlink(public_path($user->foto));
+            if ($user->foto && file_exists(base_path($user->foto))) {
+                @unlink(base_path($user->foto));
             }
 
             $file = $request->file('foto');
             $filename = 'avatar_' . $user->id_user . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/avatars'), $filename);
+            
+            // Create directory if not exists
+            $uploadPath = base_path('uploads/avatars');
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+            
+            $file->move($uploadPath, $filename);
             $data['foto'] = 'uploads/avatars/' . $filename;
         }
 

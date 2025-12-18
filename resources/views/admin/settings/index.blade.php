@@ -37,7 +37,7 @@
                 <label class="form-label">Logo Aplikasi</label>
                 @if($settings['app_logo'])
                 <div style="margin-bottom: 12px;">
-                    <img src="{{ asset($settings['app_logo']) }}" alt="Logo" style="max-height: 60px; border-radius: 8px;">
+                    <img src="{{ url($settings['app_logo']) }}" alt="Logo" style="max-height: 60px; border-radius: 8px;">
                     <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px; cursor: pointer;">
                         <input type="checkbox" name="remove_logo" value="1"> Hapus logo
                     </label>
@@ -50,7 +50,7 @@
                 <label class="form-label">Favicon</label>
                 @if($settings['app_favicon'])
                 <div style="margin-bottom: 12px;">
-                    <img src="{{ asset($settings['app_favicon']) }}" alt="Favicon" style="max-height: 32px;">
+                    <img src="{{ url($settings['app_favicon']) }}" alt="Favicon" style="max-height: 32px;">
                 </div>
                 @endif
                 <input type="file" name="app_favicon" class="form-input" accept="image/png,image/x-icon">

@@ -44,34 +44,48 @@ class SettingController extends Controller
         // Handle logo upload
         if ($request->hasFile('app_logo')) {
             $oldLogo = Setting::get('app_logo');
-            if ($oldLogo && file_exists(public_path($oldLogo))) {
-                unlink(public_path($oldLogo));
+            if ($oldLogo && file_exists(base_path($oldLogo))) {
+                @unlink(base_path($oldLogo));
             }
 
             $file = $request->file('app_logo');
             $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/settings'), $filename);
+            
+            // Create directory if not exists
+            $uploadPath = base_path('uploads/settings');
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+            
+            $file->move($uploadPath, $filename);
             Setting::set('app_logo', 'uploads/settings/' . $filename);
         }
 
         // Handle favicon upload
         if ($request->hasFile('app_favicon')) {
             $oldFavicon = Setting::get('app_favicon');
-            if ($oldFavicon && file_exists(public_path($oldFavicon))) {
-                unlink(public_path($oldFavicon));
+            if ($oldFavicon && file_exists(base_path($oldFavicon))) {
+                @unlink(base_path($oldFavicon));
             }
 
             $file = $request->file('app_favicon');
             $filename = 'favicon_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/settings'), $filename);
+            
+            // Create directory if not exists
+            $uploadPath = base_path('uploads/settings');
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+            
+            $file->move($uploadPath, $filename);
             Setting::set('app_favicon', 'uploads/settings/' . $filename);
         }
 
         // Remove logo if requested
         if ($request->has('remove_logo')) {
             $oldLogo = Setting::get('app_logo');
-            if ($oldLogo && file_exists(public_path($oldLogo))) {
-                unlink(public_path($oldLogo));
+            if ($oldLogo && file_exists(base_path($oldLogo))) {
+                @unlink(base_path($oldLogo));
             }
             Setting::set('app_logo', null);
         }
