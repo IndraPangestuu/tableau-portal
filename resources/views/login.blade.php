@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Dashboard SIDAK LANTAS</title>
+    <title>Login - {{ $appSettings['app_name'] ?? 'Dashboard SIDAK LANTAS' }}</title>
+    @if(isset($appSettings['app_favicon']) && $appSettings['app_favicon'])
+    <link rel="icon" type="image/png" href="{{ url($appSettings['app_favicon']) }}">
+    @else
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+    @endif
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
@@ -343,11 +348,15 @@
     <div class="login-container">
         <div class="logo-area">
             <div class="logo-circle">
+                @if(isset($appSettings['app_logo']) && $appSettings['app_logo'])
+                <img src="{{ url($appSettings['app_logo']) }}" alt="Logo" style="width: 70%; height: 70%; object-fit: contain;">
+                @else
                 <i class="fas fa-shield-alt"></i>
+                @endif
             </div>
         </div>
 
-        <h1 class="title">DASHBOARD SIDAK LANTAS</h1>
+        <h1 class="title">{{ $appSettings['app_name'] ?? 'DASHBOARD SIDAK LANTAS' }}</h1>
         <p class="subtitle">Silakan masuk untuk melanjutkan</p>
 
         @if($errors->has('loginError'))
@@ -378,7 +387,7 @@
             </button>
         </form>
 
-        <p class="footer-text">KORLANTAS POLRI &copy; {{ date('Y') }}</p>
+        <p class="footer-text">{{ $appSettings['footer_text'] ?? 'KORLANTAS POLRI' }} &copy; {{ date('Y') }}</p>
     </div>
 
     <script>

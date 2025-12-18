@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class SettingController extends Controller
 {
@@ -89,6 +90,9 @@ class SettingController extends Controller
             }
             Setting::set('app_logo', null);
         }
+
+        // Clear settings cache
+        Cache::forget('app_settings_view');
 
         return redirect()->route('settings.index')->with('success', 'Pengaturan berhasil disimpan.');
     }
