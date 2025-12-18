@@ -11,7 +11,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::orderBy('created_at', 'desc')->paginate(10);
+        $users = User::orderBy('id_user', 'desc')->paginate(10);
         return view('admin.users.index', compact('users'));
     }
 
@@ -23,21 +23,23 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users',
-            'nrp' => 'nullable|string|max:255|unique:users',
-            'email' => 'nullable|email|unique:users',
+            'nama' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:user',
+            'telp' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:user',
             'password' => 'required|string|min:6|confirmed',
             'role' => 'required|in:admin,user',
         ]);
 
         User::create([
-            'name' => $request->name,
+            'nama' => $request->nama,
             'username' => $request->username,
-            'nrp' => $request->nrp,
+            'telp' => $request->telp,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'user_role_id' => $request->role === 'admin' ? 1 : 3,
+            'account_status' => 'Active',
+            'password_expire_date' => now()->addMonths(6),
         ]);
 
         return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
@@ -51,20 +53,20 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'nrp' => ['nullable', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'email' => ['nullable', 'email', Rule::unique('users')->ignore($user->id)],
+            'nama' => 'required|string|max:255',
+            'username' => ['required', 'string', 'max:255', Rule::unique('user')->ignore($user->id_user, 'id_user')],
+            'telp' => 'nullable|string|max:255',
+            'email' => ['nullable', 'email', Rule::unique('user')->ignore($user->id_user, 'id_user')],
             'password' => 'nullable|string|min:6|confirmed',
             'role' => 'required|in:admin,user',
         ]);
 
         $data = [
-            'name' => $request->name,
+            'nama' => $request->nama,
             'username' => $request->username,
-            'nrp' => $request->nrp,
+            'telp' => $request->telp,
             'email' => $request->email,
-            'role' => $request->role,
+            'user_role_id' => $request->role === 'admin' ? 1 : 3,
         ];
 
         if ($request->filled('password')) {
@@ -78,7 +80,7 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if ($user->id === auth()->id()) {
+        if ($user->id_user === auth()->user()->id_user) {
             return back()->with('error', 'Tidak bisa menghapus akun sendiri.');
         }
 

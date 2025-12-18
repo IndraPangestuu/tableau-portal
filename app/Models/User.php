@@ -20,6 +20,14 @@ class User extends Authenticatable
     // Tidak ada remember_token di tabel, gunakan kolom login_session_key
     protected $rememberTokenName = 'login_session_key';
 
+    /**
+     * Get the route key for the model (untuk route model binding)
+     */
+    public function getRouteKeyName()
+    {
+        return 'id_user';
+    }
+
     protected $fillable = [
         'username',
         'password',
