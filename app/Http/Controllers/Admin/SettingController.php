@@ -65,12 +65,18 @@ class SettingController extends Controller
         // Handle favicon upload
         if ($request->hasFile('app_favicon')) {
             try {
+                $file = $request->file('app_favicon');
+                
+                // Check if file is valid
+                if (!$file->isValid()) {
+                    return redirect()->route('settings.index')->with('error', 'File favicon tidak valid: ' . $file->getErrorMessage());
+                }
+                
                 $oldFavicon = Setting::get('app_favicon');
                 if ($oldFavicon && file_exists(base_path($oldFavicon))) {
                     @unlink(base_path($oldFavicon));
                 }
 
-                $file = $request->file('app_favicon');
                 $ext = $file->getClientOriginalExtension() ?: 'png';
                 $filename = 'favicon_' . time() . '.' . $ext;
                 
@@ -82,6 +88,11 @@ class SettingController extends Controller
                 
                 $file->move($uploadPath, $filename);
                 Setting::set('app_favicon', 'uploads/settings/' . $filename);
+                
+                // Clear cache immediately
+                Cache::forget('app_settings_view');
+                
+                return redirect()->route('settings.index')->with('success', 'Favicon berhasil diupload: ' . $filename);
             } catch (\Exception $e) {
                 return redirect()->route('settings.index')->with('error', 'Gagal upload favicon: ' . $e->getMessage());
             }
