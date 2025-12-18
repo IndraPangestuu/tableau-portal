@@ -33,6 +33,14 @@ class AuthController extends Controller
 
         if (Auth::attempt($credential)) {
             $request->session()->regenerate();
+            
+            // Debug logging
+            \Log::info('Login successful', [
+                'user_id' => Auth::id(),
+                'session_id' => session()->getId(),
+                'is_authenticated' => Auth::check()
+            ]);
+            
             return redirect()->intended(route('dashboard'));
         }
 

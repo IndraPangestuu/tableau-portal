@@ -15,6 +15,14 @@ class Authenticate extends Middleware
     protected function redirectTo($request)
     {
         if (! $request->expectsJson()) {
+            // Debug logging
+            \Log::warning('Unauthenticated access attempt', [
+                'url' => $request->fullUrl(),
+                'session_id' => session()->getId(),
+                'has_session' => $request->hasSession(),
+                'cookies' => $request->cookies->keys()
+            ]);
+            
             return route('login');
         }
     }
