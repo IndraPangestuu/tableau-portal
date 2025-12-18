@@ -12,7 +12,41 @@ class EmbedController extends Controller
      */
     protected function getDefaultUsername(): string
     {
-        return config('tableau.viewer_username', 'korlantas');
+        return config('tableau.viewer_username') ?: config('tableau.admin_username', 'korlantas');
+    }
+
+    /**
+     * Get default view path from config
+     */
+    protected function getDefaultViewPath(): string
+    {
+        return config('tableau.default_view_path', '');
+    }
+
+    /**
+     * Return error view when no valid menu/path
+     */
+    protected function noMenuResponse(string $view, $menus, string $message = null)
+    {
+        return view($view, [
+            'failed' => true,
+            'ticket' => '-1',
+            'embed_url' => '',
+            'error_message' => $message ?? 'Belum ada menu dashboard yang aktif. Silakan tambahkan menu melalui panel admin.',
+            'server' => config('tableau.server'),
+            'menus' => $menus,
+            'activeMenu' => null
+        ]);
+    }
+
+    /**
+     * Get first menu with valid tableau_view_path
+     */
+    protected function getFirstValidMenu($menus)
+    {
+        return $menus->first(function ($menu) {
+            return !empty($menu->tableau_view_path);
+        });
     }
 
     /**
@@ -21,22 +55,17 @@ class EmbedController extends Controller
     public function show(TableauEmbedService $tableau)
     {
         $menus = Menu::active()->get();
-        $firstMenu = $menus->first();
+        $firstMenu = $this->getFirstValidMenu($menus);
 
-        if ($firstMenu) {
-            $username = $firstMenu->tableau_username ?: $this->getDefaultUsername();
-            $viewPath = $firstMenu->tableau_view_path;
-        } else {
-            // Tidak ada menu aktif
-            return view('embed', [
-                'failed' => true,
-                'ticket' => '-1',
-                'embed_url' => '',
-                'error_message' => 'Belum ada menu dashboard yang aktif. Silakan tambahkan menu melalui panel admin.',
-                'server' => config('tableau.server'),
-                'menus' => $menus,
-                'activeMenu' => null
-            ]);
+        if (!$firstMenu) {
+            return $this->noMenuResponse('embed', $menus);
+        }
+
+        $username = $firstMenu->tableau_username ?: $this->getDefaultUsername();
+        $viewPath = $firstMenu->tableau_view_path;
+
+        if (empty($viewPath)) {
+            return $this->noMenuResponse('embed', $menus, 'Menu tidak memiliki Tableau view path yang valid.');
         }
 
         $data = $tableau->getTrustedUrl($username, $viewPath);
@@ -58,36 +87,29 @@ class EmbedController extends Controller
     public function dashboard(TableauEmbedService $tableau)
     {
         $menus = Menu::active()->get();
-        $firstMenu = $menus->first();
+        $firstMenu = $this->getFirstValidMenu($menus);
 
-        if ($firstMenu) {
-            // Ambil dari menu pertama yang aktif
-            $username = $firstMenu->tableau_username ?: $this->getDefaultUsername();
-            $viewPath = $firstMenu->tableau_view_path;
-            $activeMenu = $firstMenu;
-
-            $data = $tableau->getTrustedUrl($username, $viewPath);
-
-            return view('dashboard-home', [
-                'failed' => $data['failed'],
-                'ticket' => $data['ticket'],
-                'embed_url' => $data['embed_url'],
-                'error_message' => $data['error_message'],
-                'server' => config('tableau.server'),
-                'menus' => $menus,
-                'activeMenu' => $activeMenu
-            ]);
+        if (!$firstMenu) {
+            return $this->noMenuResponse('dashboard-home', $menus);
         }
 
-        // Tidak ada menu aktif - tampilkan pesan
+        $username = $firstMenu->tableau_username ?: $this->getDefaultUsername();
+        $viewPath = $firstMenu->tableau_view_path;
+
+        if (empty($viewPath)) {
+            return $this->noMenuResponse('dashboard-home', $menus, 'Menu tidak memiliki Tableau view path yang valid.');
+        }
+
+        $data = $tableau->getTrustedUrl($username, $viewPath);
+
         return view('dashboard-home', [
-            'failed' => true,
-            'ticket' => '-1',
-            'embed_url' => '',
-            'error_message' => 'Belum ada menu dashboard yang aktif. Silakan tambahkan menu melalui panel admin.',
+            'failed' => $data['failed'],
+            'ticket' => $data['ticket'],
+            'embed_url' => $data['embed_url'],
+            'error_message' => $data['error_message'],
             'server' => config('tableau.server'),
             'menus' => $menus,
-            'activeMenu' => null
+            'activeMenu' => $firstMenu
         ]);
     }
 
@@ -102,7 +124,11 @@ class EmbedController extends Controller
 
         $menus = Menu::active()->get();
 
-        // Ambil username dan path dari menu yang dipilih
+        // Check if menu has valid view path
+        if (empty($menu->tableau_view_path)) {
+            return $this->noMenuResponse('dashboard-home', $menus, 'Menu ini tidak memiliki Tableau view path yang valid.');
+        }
+
         $username = $menu->tableau_username ?: $this->getDefaultUsername();
         $viewPath = $menu->tableau_view_path;
 
