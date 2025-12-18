@@ -13,8 +13,14 @@
         color: #22d3ee; font-size: 18px;
         transition: all 0.3s;
     }
+    .menu-icon.child {
+        width: 36px; height: 36px; font-size: 14px;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+        color: #a78bfa;
+    }
     .menu-info { display: flex; align-items: center; gap: 14px; }
     .menu-name { font-weight: 600; font-size: 15px; }
+    .menu-name.child { font-size: 14px; color: #cbd5e1; }
     .menu-path {
         font-size: 11px; color: #64748b; margin-top: 4px;
         max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -28,6 +34,8 @@
     .drag-handle:active { cursor: grabbing; }
     .table tr.dragging { opacity: 0.5; background: rgba(99, 102, 241, 0.15); }
     .table tr { transition: all 0.3s; }
+    .table tr.child-row { background: rgba(0, 0, 0, 0.15); }
+    .table tr.child-row:hover { background: rgba(99, 102, 241, 0.1); }
     
     .order-badge {
         width: 32px; height: 32px; border-radius: 8px;
@@ -43,9 +51,10 @@
         max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         display: inline-block;
     }
+    .path-code.parent { background: rgba(99, 102, 241, 0.15); color: #a78bfa; }
     
     .menu-stats {
-        display: flex; gap: 16px; margin-bottom: 24px;
+        display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
     }
     .menu-stat {
         padding: 16px 24px; border-radius: 12px;
@@ -56,31 +65,51 @@
     }
     .menu-stat:nth-child(1) { animation-delay: 0.1s; }
     .menu-stat:nth-child(2) { animation-delay: 0.2s; }
+    .menu-stat:nth-child(3) { animation-delay: 0.3s; }
     .menu-stat-icon {
         width: 40px; height: 40px; border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
     }
     .menu-stat-icon.total { background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.1)); color: #818cf8; }
     .menu-stat-icon.active { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1)); color: #34d399; }
+    .menu-stat-icon.parent { background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1)); color: #a78bfa; }
     .menu-stat-value { font-size: 22px; font-weight: 700; }
     .menu-stat-label { font-size: 12px; color: #64748b; }
+    
+    .child-indent { padding-left: 40px; }
+    .child-indicator { color: #64748b; margin-right: 8px; }
+    
+    .badge-parent { background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1)); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
 </style>
 @endsection
+
+@php
+    $totalMenus = $menus->count() + $menus->sum(fn($m) => $m->children->count());
+    $activeMenus = $menus->where('is_active', true)->count() + $menus->sum(fn($m) => $m->children->where('is_active', true)->count());
+    $parentMenus = $menus->count();
+@endphp
 
 @section('content')
 <div class="menu-stats">
     <div class="menu-stat">
         <div class="menu-stat-icon total"><i class="fas fa-th-list"></i></div>
         <div>
-            <div class="menu-stat-value">{{ $menus->count() }}</div>
+            <div class="menu-stat-value">{{ $totalMenus }}</div>
             <div class="menu-stat-label">Total Menu</div>
         </div>
     </div>
     <div class="menu-stat">
         <div class="menu-stat-icon active"><i class="fas fa-check-circle"></i></div>
         <div>
-            <div class="menu-stat-value">{{ $menus->where('is_active', true)->count() }}</div>
+            <div class="menu-stat-value">{{ $activeMenus }}</div>
             <div class="menu-stat-label">Menu Aktif</div>
+        </div>
+    </div>
+    <div class="menu-stat">
+        <div class="menu-stat-icon parent"><i class="fas fa-folder"></i></div>
+        <div>
+            <div class="menu-stat-value">{{ $parentMenus }}</div>
+            <div class="menu-stat-label">Menu Utama</div>
         </div>
     </div>
 </div>
@@ -106,30 +135,70 @@
             </thead>
             <tbody id="sortableMenu">
                 @foreach($menus as $menu)
+                {{-- Parent Menu --}}
                 <tr data-id="{{ $menu->id }}">
                     <td><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span></td>
                     <td>
                         <div class="menu-info">
                             <div class="menu-icon"><i class="{{ $menu->icon }}"></i></div>
                             <div>
-                                <div class="menu-name">{{ $menu->name }}</div>
-                                <div class="menu-path">{{ $menu->tableau_view_path }}</div>
+                                <div class="menu-name">
+                                    {{ $menu->name }}
+                                    @if($menu->children->count() > 0)
+                                    <span style="font-size: 11px; color: #64748b; margin-left: 8px;">({{ $menu->children->count() }} sub-menu)</span>
+                                    @endif
+                                </div>
+                                <div class="menu-path">{{ $menu->tableau_view_path ?: '-- Parent Menu --' }}</div>
                             </div>
                         </div>
                     </td>
-                    <td><code class="path-code">{{ $menu->tableau_view_path }}</code></td>
+                    <td>
+                        @if($menu->tableau_view_path)
+                        <code class="path-code">{{ $menu->tableau_view_path }}</code>
+                        @else
+                        <span class="badge badge-parent"><i class="fas fa-folder"></i> Parent</span>
+                        @endif
+                    </td>
                     <td><div class="order-badge">{{ $menu->order }}</div></td>
                     <td><span class="badge badge-{{ $menu->is_active ? 'active' : 'inactive' }}">{{ $menu->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
                     <td>
                         <div class="actions">
                             <a href="{{ route('menus.edit', $menu) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
-                            <form action="{{ route('menus.destroy', $menu) }}" method="POST" onsubmit="return confirm('Yakin hapus menu ini?')">
+                            <form action="{{ route('menus.destroy', $menu) }}" method="POST" onsubmit="return confirm('Yakin hapus menu ini{{ $menu->children->count() > 0 ? ' beserta ' . $menu->children->count() . ' sub-menu' : '' }}?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                             </form>
                         </div>
                     </td>
                 </tr>
+                {{-- Child Menus --}}
+                @foreach($menu->children as $child)
+                <tr data-id="{{ $child->id }}" class="child-row">
+                    <td><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span></td>
+                    <td>
+                        <div class="menu-info child-indent">
+                            <span class="child-indicator"><i class="fas fa-level-up-alt fa-rotate-90"></i></span>
+                            <div class="menu-icon child"><i class="{{ $child->icon }}"></i></div>
+                            <div>
+                                <div class="menu-name child">{{ $child->name }}</div>
+                                <div class="menu-path">{{ $child->tableau_view_path }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><code class="path-code">{{ $child->tableau_view_path }}</code></td>
+                    <td><div class="order-badge">{{ $child->order }}</div></td>
+                    <td><span class="badge badge-{{ $child->is_active ? 'active' : 'inactive' }}">{{ $child->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
+                    <td>
+                        <div class="actions">
+                            <a href="{{ route('menus.edit', $child) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                            <form action="{{ route('menus.destroy', $child) }}" method="POST" onsubmit="return confirm('Yakin hapus sub-menu ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
                 @endforeach
             </tbody>
         </table>

@@ -69,9 +69,21 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label">Tableau View Path *</label>
-            <input type="text" name="tableau_view_path" class="form-input" value="{{ old('tableau_view_path', $menu->tableau_view_path) }}" required>
-            <p class="form-hint">Path view di Tableau Server, contoh: /views/home/01_SummaryDAKGARLANTAS3</p>
+            <label class="form-label">Parent Menu</label>
+            <select name="parent_id" class="form-select">
+                <option value="">-- Tidak ada (Menu Utama) --</option>
+                @foreach($parentMenus as $parent)
+                <option value="{{ $parent->id }}" {{ old('parent_id', $menu->parent_id) == $parent->id ? 'selected' : '' }}>{{ $parent->name }}</option>
+                @endforeach
+            </select>
+            <p class="form-hint">Pilih parent jika ini adalah sub-menu. Kosongkan untuk menu utama.</p>
+            @error('parent_id')<p class="form-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</p>@enderror
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Tableau View Path</label>
+            <input type="text" name="tableau_view_path" class="form-input" value="{{ old('tableau_view_path', $menu->tableau_view_path) }}">
+            <p class="form-hint">Path view di Tableau Server. Kosongkan jika menu ini hanya sebagai parent/grup.</p>
             @error('tableau_view_path')<p class="form-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</p>@enderror
         </div>
 

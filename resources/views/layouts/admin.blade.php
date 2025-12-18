@@ -39,7 +39,12 @@
             border-right: 1px solid var(--border); padding: 24px 0; z-index: 100;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 4px 0 30px rgba(0, 0, 0, 0.3);
+            overflow-y: auto; overflow-x: hidden;
         }
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 3px; }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.5); }
         .sidebar::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: shimmer 3s infinite; }
         @keyframes shimmer { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
         .sidebar.collapsed { transform: translateX(-280px); }
@@ -71,6 +76,15 @@
         .nav-link:hover i { transform: scale(1.2); }
         .nav-divider { border-top: 1px solid var(--border); margin: 20px 16px; }
         .nav-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; padding: 12px 18px 8px; font-weight: 600; }
+        
+        /* Submenu styles */
+        .nav-parent { justify-content: space-between; }
+        .submenu-arrow { font-size: 12px; transition: transform 0.3s; width: auto !important; }
+        .has-submenu.open .submenu-arrow { transform: rotate(180deg); }
+        .submenu { list-style: none; padding: 0; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: rgba(0, 0, 0, 0.15); border-radius: 8px; margin: 4px 0; }
+        .has-submenu.open .submenu { max-height: 500px; }
+        .submenu .nav-link { padding: 12px 18px 12px 48px; font-size: 13px; }
+        .submenu .nav-link i { font-size: 14px; }
         
         .main-content { margin-left: 280px; min-height: 100vh; transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .main-content.expanded { margin-left: 0; }
@@ -294,14 +308,34 @@
         </div>
         
         <ul class="nav-menu">
-            @php $menus = \App\Models\Menu::active()->get(); @endphp
+            @php $menus = \App\Models\Menu::activeParentMenus()->get(); @endphp
             @if($menus->count() > 0)
                 @foreach($menus as $m)
-                <li class="nav-item">
-                    <a href="{{ route('view.menu', $m) }}" class="nav-link {{ (isset($activeMenu) && $activeMenu->id == $m->id) ? 'active' : '' }}">
-                        <i class="{{ $m->icon }}"></i> {{ $m->name }}
-                    </a>
-                </li>
+                    @if($m->activeChildren->count() > 0)
+                    {{-- Parent menu with children --}}
+                    <li class="nav-item has-submenu">
+                        <a href="javascript:void(0)" class="nav-link nav-parent" onclick="toggleSubmenu(this)">
+                            <i class="{{ $m->icon }}"></i> {{ $m->name }}
+                            <i class="fas fa-chevron-down submenu-arrow"></i>
+                        </a>
+                        <ul class="submenu">
+                            @foreach($m->activeChildren as $child)
+                            <li class="nav-item">
+                                <a href="{{ route('view.menu', $child) }}" class="nav-link {{ (isset($activeMenu) && $activeMenu->id == $child->id) ? 'active' : '' }}">
+                                    <i class="{{ $child->icon }}"></i> {{ $child->name }}
+                                </a>
+                            </li>
+                            @endforeach
+                        </ul>
+                    </li>
+                    @else
+                    {{-- Single menu without children --}}
+                    <li class="nav-item">
+                        <a href="{{ $m->tableau_view_path ? route('view.menu', $m) : 'javascript:void(0)' }}" class="nav-link {{ (isset($activeMenu) && $activeMenu->id == $m->id) ? 'active' : '' }}">
+                            <i class="{{ $m->icon }}"></i> {{ $m->name }}
+                        </a>
+                    </li>
+                    @endif
                 @endforeach
             @else
                 <li class="nav-item">
@@ -405,6 +439,16 @@
             entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('animate-in'); });
         }, { threshold: 0.1 });
         document.querySelectorAll('.card').forEach(el => observer.observe(el));
+        
+        function toggleSubmenu(el) {
+            const parent = el.closest('.has-submenu');
+            parent.classList.toggle('open');
+        }
+        
+        // Auto-open submenu if child is active
+        document.querySelectorAll('.submenu .nav-link.active').forEach(el => {
+            el.closest('.has-submenu').classList.add('open');
+        });
     </script>
     @yield('scripts')
 </body>

@@ -152,9 +152,21 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label">Tableau View Path *</label>
-            <input type="text" name="tableau_view_path" id="viewPath" class="form-input" value="{{ old('tableau_view_path') }}" placeholder="/views/workbook/dashboard" required>
-            <p class="form-hint">Path view di Tableau Server. Pilih dari daftar di atas atau input manual.</p>
+            <label class="form-label">Parent Menu</label>
+            <select name="parent_id" class="form-select" id="parentSelect" onchange="toggleViewPath()">
+                <option value="">-- Tidak ada (Menu Utama) --</option>
+                @foreach($parentMenus as $parent)
+                <option value="{{ $parent->id }}" {{ old('parent_id') == $parent->id ? 'selected' : '' }}>{{ $parent->name }}</option>
+                @endforeach
+            </select>
+            <p class="form-hint">Pilih parent jika ini adalah sub-menu. Kosongkan untuk menu utama.</p>
+            @error('parent_id')<p class="form-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</p>@enderror
+        </div>
+
+        <div class="form-group" id="viewPathGroup">
+            <label class="form-label">Tableau View Path</label>
+            <input type="text" name="tableau_view_path" id="viewPath" class="form-input" value="{{ old('tableau_view_path') }}" placeholder="/views/workbook/dashboard">
+            <p class="form-hint">Path view di Tableau Server. Kosongkan jika menu ini hanya sebagai parent/grup.</p>
             @error('tableau_view_path')<p class="form-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</p>@enderror
         </div>
 
@@ -302,5 +314,9 @@
     document.getElementById('iconInput').addEventListener('input', function() {
         document.getElementById('iconPreview').className = this.value;
     });
+
+    function toggleViewPath() {
+        // View path is optional for both parent and child menus
+    }
 </script>
 @endsection

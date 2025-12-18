@@ -51,14 +51,14 @@
     <div class="stat-card">
         <div class="stat-icon admin"><i class="fas fa-user-shield"></i></div>
         <div>
-            <div class="stat-value">{{ $users->where('role', 'admin')->count() }}</div>
+            <div class="stat-value">{{ $users->where('user_role_id', 1)->count() }}</div>
             <div class="stat-label">Admin</div>
         </div>
     </div>
     <div class="stat-card">
         <div class="stat-icon active"><i class="fas fa-user-check"></i></div>
         <div>
-            <div class="stat-value">{{ $users->where('role', 'user')->count() }}</div>
+            <div class="stat-value">{{ $users->where('user_role_id', '!=', 1)->count() }}</div>
             <div class="stat-label">User Biasa</div>
         </div>
     </div>
@@ -76,7 +76,7 @@
             <thead>
                 <tr>
                     <th>User</th>
-                    <th>NRP</th>
+                    <th>Telp</th>
                     <th>Email</th>
                     <th>Role</th>
                     <th>Aksi</th>
@@ -87,14 +87,14 @@
                 <tr>
                     <td>
                         <div class="user-cell">
-                            <div class="user-avatar-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+                            <div class="user-avatar-sm">{{ strtoupper(substr($user->nama ?? 'U', 0, 1)) }}</div>
                             <div class="user-info-cell">
-                                <div class="name">{{ $user->name }}</div>
-                                <div class="username">@{{ $user->username }}</div>
+                                <div class="name">{{ $user->nama }}</div>
+                                <div class="username">{{ '@' . $user->username }}</div>
                             </div>
                         </div>
                     </td>
-                    <td>{{ $user->nrp ?? '-' }}</td>
+                    <td>{{ $user->telp ?? '-' }}</td>
                     <td>{{ $user->email ?? '-' }}</td>
                     <td><span class="badge badge-{{ $user->role }}">{{ ucfirst($user->role) }}</span></td>
                     <td>
