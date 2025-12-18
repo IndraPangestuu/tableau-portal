@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
@@ -41,11 +40,14 @@ class ProfileController extends Controller
 
         if ($request->hasFile('foto')) {
             // Delete old photo
-            if ($user->foto && Storage::disk('public')->exists($user->foto)) {
-                Storage::disk('public')->delete($user->foto);
+            if ($user->foto && file_exists(public_path($user->foto))) {
+                unlink(public_path($user->foto));
             }
 
-            $data['foto'] = $request->file('foto')->store('avatars', 'public');
+            $file = $request->file('foto');
+            $filename = 'avatar_' . $user->id_user . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/avatars'), $filename);
+            $data['foto'] = 'uploads/avatars/' . $filename;
         }
 
         $user->update($data);

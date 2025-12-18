@@ -41,7 +41,7 @@
         <div class="profile-header">
             <div class="profile-avatar">
                 @if($user->foto)
-                    <img src="{{ Storage::url($user->foto) }}" alt="Avatar">
+                    <img src="{{ asset($user->foto) }}" alt="Avatar">
                 @else
                     {{ strtoupper(substr($user->nama, 0, 1)) }}
                 @endif

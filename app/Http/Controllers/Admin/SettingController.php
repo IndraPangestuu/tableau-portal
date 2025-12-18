@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
@@ -45,30 +44,34 @@ class SettingController extends Controller
         // Handle logo upload
         if ($request->hasFile('app_logo')) {
             $oldLogo = Setting::get('app_logo');
-            if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
-                Storage::disk('public')->delete($oldLogo);
+            if ($oldLogo && file_exists(public_path($oldLogo))) {
+                unlink(public_path($oldLogo));
             }
 
-            $path = $request->file('app_logo')->store('settings', 'public');
-            Setting::set('app_logo', $path);
+            $file = $request->file('app_logo');
+            $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/settings'), $filename);
+            Setting::set('app_logo', 'uploads/settings/' . $filename);
         }
 
         // Handle favicon upload
         if ($request->hasFile('app_favicon')) {
             $oldFavicon = Setting::get('app_favicon');
-            if ($oldFavicon && Storage::disk('public')->exists($oldFavicon)) {
-                Storage::disk('public')->delete($oldFavicon);
+            if ($oldFavicon && file_exists(public_path($oldFavicon))) {
+                unlink(public_path($oldFavicon));
             }
 
-            $path = $request->file('app_favicon')->store('settings', 'public');
-            Setting::set('app_favicon', $path);
+            $file = $request->file('app_favicon');
+            $filename = 'favicon_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/settings'), $filename);
+            Setting::set('app_favicon', 'uploads/settings/' . $filename);
         }
 
         // Remove logo if requested
         if ($request->has('remove_logo')) {
             $oldLogo = Setting::get('app_logo');
-            if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
-                Storage::disk('public')->delete($oldLogo);
+            if ($oldLogo && file_exists(public_path($oldLogo))) {
+                unlink(public_path($oldLogo));
             }
             Setting::set('app_logo', null);
         }
