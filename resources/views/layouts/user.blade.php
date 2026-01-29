@@ -9,8 +9,8 @@
     <link rel="icon" type="image/x-icon" href="{{ url($appSettings['app_favicon']) }}?v={{ time() }}">
     <link rel="shortcut icon" href="{{ url($appSettings['app_favicon']) }}?v={{ time() }}">
     @else
-    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
-    <link rel="shortcut icon" href="{{ asset('images/favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ url('images/korlantas.png') }}">
+    <link rel="shortcut icon" href="{{ url('images/korlantas.png') }}">
     @endif
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -86,8 +86,32 @@
         .nav-parent { justify-content: space-between; }
         .submenu-arrow { font-size: 12px; transition: transform 0.3s; width: auto !important; }
         .has-submenu.open .submenu-arrow { transform: rotate(180deg); }
-        .submenu { list-style: none; padding: 0; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: rgba(0, 0, 0, 0.15); border-radius: 8px; margin: 4px 0; }
-        .has-submenu.open .submenu { max-height: 500px; }
+        .submenu {
+            list-style: none;
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            margin: 4px 0;
+        }
+        .has-submenu.open .submenu {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+        }
+        .has-submenu.open .submenu::-webkit-scrollbar { width: 4px; }
+        .has-submenu.open .submenu::-webkit-scrollbar-track { background: transparent; }
+        .has-submenu.open .submenu::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 2px;
+        }
+        .has-submenu.open .submenu::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
         .submenu .nav-link { padding: 12px 18px 12px 48px; font-size: 13px; }
         .submenu .nav-link i { font-size: 14px; }
         
@@ -98,7 +122,9 @@
             background: rgba(15, 15, 30, 0.8); backdrop-filter: blur(20px);
             padding: 16px 32px; display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50;
+            transition: transform 0.3s ease;
         }
+        .header.fullscreen-hidden { transform: translateY(-100%); }
         .header-left { display: flex; align-items: center; gap: 20px; }
         .btn-toggle {
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.1));
@@ -112,6 +138,14 @@
         .header-title p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
         
         .header-actions { display: flex; align-items: center; gap: 16px; }
+        .btn-fullscreen {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.3); color: var(--accent);
+            width: 44px; height: 44px; border-radius: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
+            transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .btn-fullscreen:hover { transform: scale(1.05); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3); }
         .user-info { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid var(--border); }
         .user-avatar {
             width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--accent));
@@ -136,6 +170,16 @@
             animation: cardFadeIn 0.6s ease-out;
             height: calc(100vh - 77px);
             width: 100%;
+            transition: height 0.3s ease;
+        }
+        .fullscreen-mode .embed-container {
+            height: 100vh !important;
+        }
+        .fullscreen-mode .sidebar {
+            transform: translateX(-280px) !important;
+        }
+        .fullscreen-mode .main-content {
+            margin-left: 0 !important;
         }
         @keyframes cardFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .embed-body { position: relative; height: 100%; width: 100%; overflow: hidden; }
@@ -247,9 +291,15 @@
                         <ul class="submenu">
                             @foreach($m->activeChildren as $child)
                             <li class="nav-item">
+                                @if($child && $child->tableau_view_path)
                                 <a href="{{ route('view.menu', $child) }}" class="nav-link {{ (isset($activeMenu) && $activeMenu->id == $child->id) ? 'active' : '' }}">
                                     <i class="{{ $child->icon }}"></i> {{ $child->name }}
                                 </a>
+                                @else
+                                <a href="javascript:void(0)" class="nav-link disabled" style="opacity: 0.5;">
+                                    <i class="{{ $child->icon }}"></i> {{ $child->name }}
+                                </a>
+                                @endif
                             </li>
                             @endforeach
                         </ul>
@@ -257,9 +307,15 @@
                     @else
                     {{-- Single menu without children --}}
                     <li class="nav-item">
-                        <a href="{{ $m->tableau_view_path ? route('view.menu', $m) : 'javascript:void(0)' }}" class="nav-link {{ (isset($activeMenu) && $activeMenu->id == $m->id) ? 'active' : '' }}">
+                        @if($m && $m->tableau_view_path)
+                        <a href="{{ route('view.menu', $m) }}" class="nav-link {{ (isset($activeMenu) && $activeMenu->id == $m->id) ? 'active' : '' }}">
                             <i class="{{ $m->icon }}"></i> {{ $m->name }}
                         </a>
+                        @else
+                        <a href="javascript:void(0)" class="nav-link disabled" style="opacity: 0.5;">
+                            <i class="{{ $m->icon }}"></i> {{ $m->name }}
+                        </a>
+                        @endif
                     </li>
                     @endif
                 @endforeach
@@ -281,9 +337,15 @@
             <li class="nav-label">Favorit</li>
             @foreach($userFavorites as $fav)
             <li class="nav-item">
+                @if($fav->menu && $fav->menu->tableau_view_path)
                 <a href="{{ route('view.menu', $fav->menu) }}" class="nav-link {{ (isset($activeMenu) && $activeMenu->id == $fav->menu_id) ? 'active' : '' }}">
                     <i class="fas fa-star" style="color: #fbbf24;"></i> {{ Str::limit($fav->menu->name, 20) }}
                 </a>
+                @else
+                <a href="javascript:void(0)" class="nav-link disabled" style="opacity: 0.5;">
+                    <i class="fas fa-star" style="color: #fbbf24;"></i> {{ Str::limit($fav->menu->name ?? 'Menu Tidak Tersedia', 20) }}
+                </a>
+                @endif
             </li>
             @endforeach
             @endif
@@ -293,9 +355,15 @@
             <li class="nav-label">Terakhir Diakses</li>
             @foreach($recentDashboards as $recent)
             <li class="nav-item">
+                @if($recent->menu && $recent->menu->tableau_view_path)
                 <a href="{{ route('view.menu', $recent->menu) }}" class="nav-link {{ (isset($activeMenu) && $activeMenu->id == $recent->menu_id) ? 'active' : '' }}">
                     <i class="fas fa-history" style="color: var(--text-muted);"></i> {{ Str::limit($recent->menu->name, 20) }}
                 </a>
+                @else
+                <a href="javascript:void(0)" class="nav-link disabled" style="opacity: 0.5;">
+                    <i class="fas fa-history" style="color: var(--text-muted);"></i> {{ Str::limit($recent->menu->name ?? 'Menu Tidak Tersedia', 20) }}
+                </a>
+                @endif
             </li>
             @endforeach
             @endif
@@ -314,6 +382,7 @@
             </div>
             <div class="header-actions">
                 <button class="btn-toggle" onclick="openSearch()" title="Cari Menu (Ctrl+K)" style="margin-right: 8px;"><i class="fas fa-search"></i></button>
+                <button class="btn-fullscreen" onclick="toggleFullscreen()" title="Fullscreen (F11)" style="margin-right: 8px;"><i class="fas fa-expand" id="fullscreenIcon"></i></button>
                 <a href="{{ route('profile.show') }}" class="user-info" style="text-decoration: none;">
                     <div class="user-avatar">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</div>
                     <div class="user-details">
@@ -448,6 +517,58 @@
                 bgAnimated.style.animationPlayState = 'running';
             }
         });
+        
+        // Fullscreen functionality for toolbar buttons - Global function
+        let isFullscreen = false;
+        function toggleFullscreen() {
+            isFullscreen = !isFullscreen;
+            const body = document.body;
+            const header = document.querySelector('.header');
+            const icon = document.getElementById('fullscreenIcon');
+            
+            if (isFullscreen) {
+                body.classList.add('fullscreen-mode');
+                header.classList.add('fullscreen-hidden');
+                if (icon) {
+                    icon.classList.remove('fa-expand');
+                    icon.classList.add('fa-compress');
+                }
+                
+                // Try to enter browser fullscreen
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen();
+                }
+            } else {
+                body.classList.remove('fullscreen-mode');
+                header.classList.remove('fullscreen-hidden');
+                if (icon) {
+                    icon.classList.remove('fa-compress');
+                    icon.classList.add('fa-expand');
+                }
+                
+                // Exit browser fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+            
+            // Save preference
+            localStorage.setItem('fullscreenMode', isFullscreen);
+        }
+        
+        // Restore fullscreen state
+        const savedFullscreen = localStorage.getItem('fullscreenMode');
+        if (savedFullscreen === 'true') {
+            setTimeout(() => toggleFullscreen(), 100);
+        }
     </script>
     @yield('scripts')
 </body>
